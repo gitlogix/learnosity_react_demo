@@ -1,10 +1,12 @@
 const Learnosity = require('learnosity-sdk-nodejs/index'); // Include Learnosity SDK constructor
 const uuid = require('uuid'); // Load the UUID library
-const production_domain = require('../utils/domains');
+const production_domain = require('../../utils/domains');
 
-const authorRoute = () => {
+const authorCreateItem = () => {
 
     // - - - - - - Learnosity's server-side configuration - - - - - - //
+
+    const reference_id = uuid.v4();
 
     let domain = 'localhost';
 
@@ -15,12 +17,14 @@ const authorRoute = () => {
 
     //console.log(production_domain.prodDomain());
 
+
     // variable created to route from assessment api to reports api 
     // - triggered when user closes test.
 
 
     // Instantiate the SDK
     const learnositySdk = new Learnosity();
+    console.log(learnositySdk);
 
     // Primer configuration parameters:
     const request = learnositySdk.init(
@@ -39,16 +43,33 @@ const authorRoute = () => {
         process.env.CONSUMER_SECRET,
         {
 
-            mode: 'item_list',
+            mode: 'item_edit',
+            reference: reference_id,
             config: {
                 item_edit: {
                     item: {
                         reference: {
-                            show: true,
                             edit: true
                         },
                         dynamic_content: true,
                         shared_passage: true,
+                        actions: {
+                            show: true,
+                        },
+                        details: {
+                            description: {
+                                show: true,
+                                edit: true
+                            },
+                            source: {
+                                show: true,
+                                edit: true
+                            },
+                            note: {
+                                show: true,
+                                edit: true
+                            }
+                        },
                         enable_audio_recording: true
                     }
                 }
@@ -59,10 +80,11 @@ const authorRoute = () => {
                 lastname: 'User',
                 email: 'demos@learnosity.com'
             }
+
         }
     );
 
     return { request };
 }
 
-module.exports = authorRoute;
+module.exports = authorCreateItem;

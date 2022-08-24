@@ -1,6 +1,5 @@
 const Learnosity = require('learnosity-sdk-nodejs/index'); // Include Learnosity SDK constructor
-const uuid = require('uuid'); // Load the UUID library
-const production_domain = require('../utils/domains');
+const production_domain = require('../../utils/domains');
 
 const authorMultipleItemRoute = () => {
 

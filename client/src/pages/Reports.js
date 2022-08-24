@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import { ExternalScript } from '../utils/ExternalScript';
 import { ItemApiListner } from "../utils/ItemApiListener";
-import { ReportsWithScriptLoaded } from '../components/ReportsWithScriptLoaded';
 import '../style/App.css';
 
 const Reports = () => {
@@ -54,7 +53,12 @@ const Reports = () => {
             <div className='results-container'>
                 <h1 className='results-header'>🏆 Your Results 🏆</h1>
                 {status === 'loading' && <p> loading... </p>}
-                {status === 'ready' && <ReportsWithScriptLoaded />}
+                {
+                    status === 'ready' &&
+                    <div id='report-container'>
+                        <div id='learnosity_report'></div>
+                    </div>
+                }
                 <button className="btn-try-again" onClick={() => navigate('/', { replace: true })}> Try Again ? </button>
             </div>
         </>

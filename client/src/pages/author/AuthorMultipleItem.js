@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ExternalScript } from '../utils/ExternalScript';
-import { ItemApiListner } from "../utils/ItemApiListener";
-import '../style/App.css';
+import { ExternalScript } from '../../utils/ExternalScript';
+import { ItemApiListner } from "../../utils/ItemApiListener";
+import '../../style/App.css';
 
 const AuthorMultipleItem = () => {
     const [itemAPI, setItemAPI] = useState(null);

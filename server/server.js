@@ -2,9 +2,10 @@ const path = require('path');
 const express = require('express');
 const reports = require('./controllers/reportsRoute');
 const assess = require('./controllers/assessRoute');
-const author = require('./controllers/authorRoute');
+const author = require('./controllers/author/authorRoute');
 const welcome = require('./controllers/welcomeRoute');
-const authorMultipleItemRoute = require('./controllers/authorMultipleItemRoute');
+const authorMultipleItemRoute = require('./controllers/author/authorMultipleItemRoute');
+const authorCreateItem = require('./controllers/author/authorCreateItem');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3001;
@@ -39,6 +40,14 @@ app.get('/author', async (req, res) => {
   try {
     console.log('Route /author has been called.');
     res.json(author());
+  } catch (err) {
+    res.status(200).json(err);
+  }
+});
+app.get('/author/item-create', async (req, res) => {
+  try {
+    console.log('Route /author has been called.');
+    res.json(authorCreateItem());
   } catch (err) {
     res.status(200).json(err);
   }

@@ -6,7 +6,7 @@
   width: 100vw;
 }
 
-.message-container {
+.assesment-message-container {
   position: absolute;
   bottom: 3rem;
   left: 15%;
@@ -21,13 +21,29 @@
   filter: hue-rotate(360deg);
 }
 
+.author-message-container {
+  position: absolute;
+  bottom: 10rem;
+  left: 15%;
+  width: 70vw;
+  height: 3rem;
+  text-align: center;
+  background-color: rgb(235, 235, 235);
+  border: 0.4rem solid;
+  border-image: linear-gradient(45deg, gold, deeppink) 1;
+  clip-path: inset(0px round 0.5rem);
+  animation: huerotate 6s infinite linear;
+  filter: hue-rotate(360deg);
+}
+
 @keyframes huerotate {
-    0% {
-        filter: hue-rotate(0deg);
-    }
-    100% {
-        filter: hue-rorate(360deg);
-    }
+  0% {
+    filter: hue-rotate(0deg);
+  }
+
+  100% {
+    filter: hue-rorate(360deg);
+  }
 }
 
 .message-container:hover {
@@ -35,7 +51,7 @@
   transform: scale(120%)
 }
 
-.the-message{
+.the-message {
   margin: 0 auto;
   transform: translateY(33%);
 }
@@ -64,40 +80,40 @@
   text-decoration: none;
 }
 
-.app-link:hover{
+.app-link:hover {
   cursor: pointer;
 }
 
-.react-logo-container{
-  position:absolute;
+.react-logo-container {
+  position: absolute;
   transform: translateX(40%) translateY(90%);
 }
 
-.react-logo{
+.react-logo {
   transform: translateY(30%);
 }
 
-.results-container{
-    width: 80vw;
-    margin: auto;
+.results-container {
+  width: 80vw;
+  margin: auto;
 }
 
-.btn-try-again{
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    position: absolute;
-    min-width: 150px;
-    margin-top: 11px;
-    background-color: #1877b1;
-    color: #fff;
-    border: 1px solid #1877b1;
-    font-size: 1.25em;
-    padding: 0.4em 0.9em;
-    cursor: pointer;
+.btn-try-again {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: absolute;
+  min-width: 150px;
+  margin-top: 11px;
+  background-color: #1877b1;
+  color: #fff;
+  border: 1px solid #1877b1;
+  font-size: 1.25em;
+  padding: 0.4em 0.9em;
+  cursor: pointer;
 }
 
-.btn-try-again:hover{
-    background-color: #0e4161;
+.btn-try-again:hover {
+  background-color: #0e4161;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -108,18 +124,21 @@
 
 @keyframes app-logo-spin {
   from {
-    transform: scale(0.25,0.25);;
+    transform: scale(0.25, 0.25);
+    ;
   }
+
   to {
-    transform: scale(1.5,1.5);;
+    transform: scale(1.5, 1.5);
+    ;
   }
 }
 
 @media only screen and (max-width: 481px) {
-  .message-container{
-      left: 8%;
-      width: 80vw;
-      bottom: 4rem;
+  .message-container {
+    left: 8%;
+    width: 80vw;
+    bottom: 4rem;
   }
 
   .the-message {

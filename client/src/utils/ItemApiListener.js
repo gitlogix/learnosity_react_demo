@@ -19,6 +19,23 @@ export const QuizListener = (authentication) => {
             })
         }
 
+        if (typeof LearnosityAuthor != 'undefined') {
+            var callbacks = {
+                "readyListener": function () {
+                    console.log("Learnosity Author API is ready");
+                },
+                "errorListener": function (e) {
+                    //callback to occur on error
+                    console.log("Error code ", e.code);
+                    console.log("Error message ", e.message);
+                    console.log("Error name ", e.name);
+                    console.log("Error name ", e.title);
+                }
+            };
+
+            learnosityObj = LearnosityAuthor.init(authentication, callbacks)
+        }
+
         if (typeof LearnosityReports != 'undefined') {
 
             learnosityObj = LearnosityReports.init(authentication, {

@@ -1,7 +1,7 @@
 
 const welcomeRoutes = () => {
 
-    return { message: '🎯 Welcome... click here to start assessment  🎯'};
+    return { message: '🎯 Welcome... click here to start assessment  🎯' };
 
 }
 

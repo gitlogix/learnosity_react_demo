@@ -43,9 +43,9 @@ const Home = () => {
       ) : (
         <div className="app">
           <header className="app-header">
-            <a 
-              className="app-link" 
-              href="/assess" 
+            <a
+              className="app-link"
+              href="/assess"
               rel="noopener noreferrer"
             >
               <img src={logo} className="app-logo" alt="learnosity logo" />
@@ -58,18 +58,30 @@ const Home = () => {
             >
               <img src={learnosity} className="app-name" alt="learnosity" />
             </a>
-            <div className="react-logo-container">using 
+            <div className="react-logo-container">using
               <img src={react_logo} className="react-logo" alt="react logo" />
             </div>
           </header>
-          <a 
-            className="app-link" 
-            href="/assess" 
+          <a
+            className="app-link"
+            href="/assess"
             rel="noopener noreferrer"
           >
-            <div className="message-container">
+            <div className="assesment-message-container message-container">
               <div className="a-message-for-you">
                 <p className="the-message"> {homeMessage} </p>
+              </div>
+            </div>
+
+          </a>
+          <a
+            className="app-link"
+            href="/author"
+            rel="noopener noreferrer"
+          >
+            <div className="author-message-container message-container">
+              <div className="a-message-for-you">
+                <p className="the-message">🎯 Welcome... click here to start author  🎯</p>
               </div>
             </div>
           </a>

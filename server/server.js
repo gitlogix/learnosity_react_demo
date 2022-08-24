@@ -2,6 +2,7 @@ const path = require('path');
 const express = require('express');
 const reports = require('./controllers/reportsRoute');
 const assess = require('./controllers/assessRoute');
+const author = require('./controllers/authorRoute');
 const welcome = require('./controllers/welcomeRoute');
 require('dotenv').config();
 
@@ -33,10 +34,19 @@ app.get('/quiz-loader', async (req, res) => {
   }
 });
 
+app.get('/author', async (req, res) => {
+  try {
+    console.log('Route /author has been called.');
+    res.json(author());
+  } catch (err) {
+    res.status(200).json(err);
+  }
+});
+
 app.get('/reports-loader', async (req, res) => {
   try {
     console.log('Route /reports has been called.');
-    const quiz_user = req.headers.referer.slice(req.headers.referer.indexOf('=')+1);
+    const quiz_user = req.headers.referer.slice(req.headers.referer.indexOf('=') + 1);
     res.json(reports(quiz_user));
   } catch (err) {
     res.status(500).json(err);

@@ -1,11 +1,15 @@
+/* eslint-disable no-undef */
+import React from 'react';
 
-export const ItemApiListner = (authentication) => {
+export const QuizListener = (authentication) => {
+
+    let learnosityObj = '';
 
     if (authentication) {
 
         if (typeof LearnosityItems != 'undefined') {
 
-            window.LearnosityItems.init(authentication, {
+            learnosityObj = LearnosityItems.init(authentication, {
                 readyListener() {
                     console.log('👍🏼 <<< Learnosity Assess API is ready >>> 🧘🏼');
                 },
@@ -29,12 +33,12 @@ export const ItemApiListner = (authentication) => {
                 }
             };
 
-            window.LearnosityAuthor.init(authentication, callbacks)
+            learnosityObj = LearnosityAuthor.init(authentication, callbacks)
         }
 
         if (typeof LearnosityReports != 'undefined') {
 
-            window.LearnosityReports.init(authentication, {
+            learnosityObj = LearnosityReports.init(authentication, {
                 readyListener() {
                     console.log('👍🏼 <<< Learnosity Reports API is ready >>> 🧘🏼');
                 },
@@ -45,4 +49,10 @@ export const ItemApiListner = (authentication) => {
         }
 
     }
+
+    return (
+        <>
+            {learnosityObj}
+        </>
+    )
 }

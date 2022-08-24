@@ -4,6 +4,7 @@ const reports = require('./controllers/reportsRoute');
 const assess = require('./controllers/assessRoute');
 const author = require('./controllers/authorRoute');
 const welcome = require('./controllers/welcomeRoute');
+const authorMultipleItemRoute = require('./controllers/authorMultipleItemRoute');
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3001;
@@ -38,6 +39,15 @@ app.get('/author', async (req, res) => {
   try {
     console.log('Route /author has been called.');
     res.json(author());
+  } catch (err) {
+    res.status(200).json(err);
+  }
+});
+
+app.get('/author/multi-item', async (req, res) => {
+  try {
+    console.log('Route /authorMultipleItemRoute has been called.');
+    res.json(authorMultipleItemRoute());
   } catch (err) {
     res.status(200).json(err);
   }

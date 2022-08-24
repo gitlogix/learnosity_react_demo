@@ -3,13 +3,13 @@ import { ExternalScript } from '../utils/ExternalScript';
 import { ItemApiListner } from "../utils/ItemApiListener";
 import '../style/App.css';
 
-const Author = () => {
+const AuthorMultipleItem = () => {
     const [itemAPI, setItemAPI] = useState(null);
     const [status, setStatus] = useState('');
 
     useEffect(() => {
         const callLearnosityAPI = async () => {
-            const response = await fetch('/author');
+            const response = await fetch('/author/multi-item');
             const body = await response.json();
             if (response.status !== 200 && response.status !== 304) {
                 throw Error(body.message)
@@ -42,6 +42,7 @@ const Author = () => {
         myListener();
     }, [status])
 
+
     return (
         <>
             {
@@ -54,4 +55,4 @@ const Author = () => {
     )
 }
 
-export default Author;
+export default AuthorMultipleItem;

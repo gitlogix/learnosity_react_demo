@@ -1,47 +1,55 @@
 import { useState, useEffect } from 'react';
-import { useExternalScript } from '../hooks/useExternalScript';
-import { AssessWithScriptLoaded } from '../components/AssessWithScriptLoaded';
+import { ExternalScript } from '../utils/ExternalScript';
+import { ItemApiListner } from "../utils/ItemApiListener";
 import '../style/App.css';
 
 const Assess = () => {
-
   const [itemAPI, setItemAPI] = useState(null);
+  const [status, setStatus] = useState('');
 
   useEffect(() => {
-
-    if(!itemAPI){
-
-      const callLearnosityAPI = async () => {
-        const response = await fetch('/quiz-loader');
-        const body = await response.json();
-
-        if (response.status !== 200) {
-          throw Error(body.message)
-        }
-        setItemAPI(JSON.stringify(body));
+    const callLearnosityAPI = async () => {
+      const response = await fetch('/quiz-loader');
+      const body = await response.json();
+      if (response.status !== 200 && response.status !== 304) {
+        throw Error(body.message)
       }
+      setItemAPI(JSON.stringify(body));
 
-      callLearnosityAPI()
-        .catch(console.error);
+      const learnosityScript = '//items.learnosity.com/?v2022.1.LTS';
+      ExternalScript(learnosityScript)
+        .then(res => setStatus(res))
+        .catch(e => console.log(e))
     }
 
-  }, [itemAPI]);
+    callLearnosityAPI()
+      .catch(console.error);
 
-  let authenticated = '';
+  }, []);
+  useEffect(() => {
+    let authenticated = '';
+    if (itemAPI) {
+      authenticated = JSON.parse(itemAPI);
+    }
 
-  if (itemAPI) {
-    authenticated = JSON.parse(itemAPI);
-  }
+    const myListener = async () => {
+      let quiz = ItemApiListner(authenticated.request);
 
-  const learnosityScript = '//items.learnosity.com/?v2022.1.LTS';
-  const status = useExternalScript(learnosityScript, authenticated.request);
+      let result = await quiz;
+      return (result);
+    }
+
+    myListener();
+  }, [status])
 
   return (
     <>
-      <div>
-        {status === 'loading' && <p> loading... </p>}
-        {status === 'ready' && <AssessWithScriptLoaded />}
-      </div>
+      {
+        status === 'ready' &&
+        <div id='quiz-container'>
+          <div id='learnosity_assess'></div>
+        </div>
+      }
     </>
   )
 }

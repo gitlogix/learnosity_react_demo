@@ -6,6 +6,8 @@ import Author from './pages/author/Author';
 import AuthorMultipleItem from './pages/author/AuthorMultipleItem';
 import AuthorCreateItem from './pages/author/AuthorCreateItem';
 import Reports from './pages/Reports';
+import AuthorCreateActivity from './pages/author/AuthorCreateActivity';
+
 import './style/App.css'
 
 const App = () => {
@@ -17,6 +19,7 @@ const App = () => {
         <Route exact path='/author' element={<Author />} />
         <Route exact path='/author/multi-item' element={<AuthorMultipleItem />} />
         <Route exact path='/author/item-create' element={<AuthorCreateItem />} />
+        <Route exact path='/author/acivity-create' element={<AuthorCreateActivity />} />
         <Route exact path='/reports' element={<Reports />} />
       </Routes>
     </BrowserRouter>

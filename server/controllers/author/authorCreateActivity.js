@@ -1,9 +1,12 @@
 const Learnosity = require('learnosity-sdk-nodejs/index'); // Include Learnosity SDK constructor
+const uuid = require('uuid'); // Load the UUID library
 const production_domain = require('../../utils/domains');
 
-const authorMultipleItemRoute = () => {
+const authorCreateItem = () => {
 
     // - - - - - - Learnosity's server-side configuration - - - - - - //
+
+    const reference_id = uuid.v4();
 
     let domain = 'localhost';
 
@@ -14,12 +17,14 @@ const authorMultipleItemRoute = () => {
 
     //console.log(production_domain.prodDomain());
 
+
     // variable created to route from assessment api to reports api 
     // - triggered when user closes test.
 
 
     // Instantiate the SDK
     const learnositySdk = new Learnosity();
+    console.log(learnositySdk);
 
     // Primer configuration parameters:
     const request = learnositySdk.init(
@@ -39,39 +44,18 @@ const authorMultipleItemRoute = () => {
         {
 
             mode: 'activity_edit',
-            config: {
-                activity_edit: {
-                    item_search: {
-                        item_banks: [
-                            {
-                                organisation_id: 6,
-                                item_bank_name: 'Demos'
-                            },
-                            {
-                                organisation_id: 505,
-                                item_bank_name: 'Demos Read-Only'
-                            }
-                        ]
-
-                    },
-
-                    item: {
-                        add: {
-                            show: false,
-                        }
-                    }
-                }
-            },
+            reference: reference_id,
             user: {
                 id: 'demos-site',
                 firstname: 'Demos',
                 lastname: 'User',
                 email: 'demos@learnosity.com'
             }
+
         }
     );
 
     return { request };
 }
 
-module.exports = authorMultipleItemRoute;
+module.exports = authorCreateItem;

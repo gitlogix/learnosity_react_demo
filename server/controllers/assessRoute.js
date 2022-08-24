@@ -24,63 +24,63 @@ const assessRoute = () => {
   const user_logged_in = `/reports?user_id=${user_id}`;
 
   // Instantiate the SDK
-  const learnositySdk = new Learnosity(); 
+  const learnositySdk = new Learnosity();
 
   // Primer configuration parameters:
   const request = learnositySdk.init(
 
-      'items', // selects Items API
+    'items', // selects Items API
 
-      /*  Your Consumer Key and Consumer Secret are the public & private security keys required to 
-          access Learnosity APIs and data.
-          These keys grant access to Learnosity's public demos account. Learnosity will provide 
-          keys for your own account. 
-      */
-      {
-        consumer_key: process.env.CONSUMER_KEY, 
-        domain: domain
-      },
-      process.env.CONSUMER_SECRET, 
-      {
-        // Unique student identifier, a UUID generated on line 9.
-        user_id: user_id,
+    /*  Your Consumer Key and Consumer Secret are the public & private security keys required to 
+        access Learnosity APIs and data.
+        These keys grant access to Learnosity's public demos account. Learnosity will provide 
+        keys for your own account. 
+    */
+    {
+      consumer_key: process.env.CONSUMER_KEY,
+      domain: domain
+    },
+    process.env.CONSUMER_SECRET,
+    {
+      // Unique student identifier, a UUID generated on line 9.
+      user_id: user_id,
 
-        // A reference of the Activity to retrieve from the Item bank, defining which
-        // Items will be served in this assessment.
-        
-        activity_template_id: 'react_sdk_primer_activity',
+      // A reference of the Activity to retrieve from the Item bank, defining which
+      // Items will be served in this assessment.
 
-        // Uniquely identifies this specific assessment attempt session for  save/resume, data
-        // retrieval and reporting purposes. A UUID generated on line 18.
-        session_id: session_id,
+      activity_template_id: 'react_sdk_primer_activity',
 
-        // Used in data retrieval and reporting to compare results with other users
-        // submitting the same assessment.
-        activity_id: 'react_sdk_primer_activity',
+      // Uniquely identifies this specific assessment attempt session for  save/resume, data
+      // retrieval and reporting purposes. A UUID generated on line 18.
+      session_id: session_id,
 
-        // Selects a rendering mode, `assess` type is a 'standalone' mode (loading a complete
-        // assessment player for navigation, alternatively use `inline` for embedding into a page).
-        rendering_type: 'assess',
+      // Used in data retrieval and reporting to compare results with other users
+      // submitting the same assessment.
+      activity_id: 'd6dc9e81-35c6-4697-9f8e-9acea8048139',
 
-        // Selects the context for the student response storage `submit_practice` mode means
-        // the student response is storage in the Learnosity cloud, for grading.
-        type: 'submit_practice',
+      // Selects a rendering mode, `assess` type is a 'standalone' mode (loading a complete
+      // assessment player for navigation, alternatively use `inline` for embedding into a page).
+      rendering_type: 'assess',
 
-        // Human-friendly display name to be shown in reporting.
-        name: 'A Learnosity React Demo',
+      // Selects the context for the student response storage `submit_practice` mode means
+      // the student response is storage in the Learnosity cloud, for grading.
+      type: 'submit_practice',
 
-        // Can be set to `initial, `resume` or `review`. Optional. Default = `initial`.
-        state: 'initial',
+      // Human-friendly display name to be shown in reporting.
+      name: 'A Learnosity React Demo',
 
-        config: {
-          configuration: {
-            'onsubmit_redirect_url': user_logged_in,
-            'lazyload':true
-          }
+      // Can be set to `initial, `resume` or `review`. Optional. Default = `initial`.
+      state: 'initial',
+
+      config: {
+        configuration: {
+          'onsubmit_redirect_url': user_logged_in,
+          'lazyload': true
+        }
       }
     });
 
-    return { request };
+  return { request };
 }
 
 module.exports = assessRoute;

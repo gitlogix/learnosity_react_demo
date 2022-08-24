@@ -6,6 +6,9 @@ const author = require('./controllers/author/authorRoute');
 const welcome = require('./controllers/welcomeRoute');
 const authorMultipleItemRoute = require('./controllers/author/authorMultipleItemRoute');
 const authorCreateItem = require('./controllers/author/authorCreateItem');
+const authorCreateActivity = require('./controllers/author/authorCreateActivity');
+
+
 require('dotenv').config();
 
 const PORT = process.env.PORT || 3001;
@@ -44,10 +47,20 @@ app.get('/author', async (req, res) => {
     res.status(200).json(err);
   }
 });
+
 app.get('/author/item-create', async (req, res) => {
   try {
     console.log('Route /author has been called.');
     res.json(authorCreateItem());
+  } catch (err) {
+    res.status(200).json(err);
+  }
+});
+
+app.get('/author/activity-create', async (req, res) => {
+  try {
+    console.log('Route /author has been called.');
+    res.json(authorCreateActivity());
   } catch (err) {
     res.status(200).json(err);
   }

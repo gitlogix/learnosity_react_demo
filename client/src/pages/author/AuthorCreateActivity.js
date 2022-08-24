@@ -3,13 +3,13 @@ import { ExternalScript } from '../../utils/ExternalScript';
 import { ItemApiListner } from "../../utils/ItemApiListener";
 import '../../style/App.css';
 
-const AuthorCreateItem = () => {
+const AuthorCreateActivity = () => {
     const [itemAPI, setItemAPI] = useState(null);
     const [status, setStatus] = useState('');
 
     useEffect(() => {
         const callLearnosityAPI = async () => {
-            const response = await fetch('/author/item-create');
+            const response = await fetch('/author/activity-create');
             const body = await response.json();
             if (response.status !== 200 && response.status !== 304) {
                 throw Error(body.message)
@@ -55,4 +55,4 @@ const AuthorCreateItem = () => {
     )
 }
 
-export default AuthorCreateItem;
+export default AuthorCreateActivity;

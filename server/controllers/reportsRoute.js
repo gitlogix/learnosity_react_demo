@@ -12,7 +12,7 @@ const reportsRoute = (user) => {
   const learnositySdk = new Learnosity();
 
   const request = learnositySdk.init(
-    
+
     'reports',  // selects Reports API
     {
       consumer_key: process.env.CONSUMER_KEY,
@@ -30,7 +30,7 @@ const reportsRoute = (user) => {
           users: [{ id: user, name: 'Learnosity_1' }],
           activities: [
             {
-              id: 'react_sdk_primer_activity',
+              id: '3e5e4944-f6c8-4b10-ae58-8e1b6cc91962',
               name: 'react_sdk_primer_activity',
             },
           ],

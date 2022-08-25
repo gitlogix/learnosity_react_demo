@@ -12,9 +12,13 @@ export const ExternalScript = (url) => {
         const handleScript = (e) => {
             if (e.type === "load") {
                 results = 'ready';
+                script.removeEventListener("load", handleScript);
+                script.removeEventListener("error", handleScript);
                 resolve(results);
             } else {
                 results = 'error';
+                script.removeEventListener("load", handleScript);
+                script.removeEventListener("error", handleScript);
                 reject(results);
             }
         };

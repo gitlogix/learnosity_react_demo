@@ -9,6 +9,7 @@ const Reports = () => {
 
     const [reportAPI, setReportAPI] = useState(null);
     const [status, setStatus] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
 
@@ -20,7 +21,7 @@ const Reports = () => {
                 throw Error(body.message)
             }
             setReportAPI(JSON.stringify(body));
-            const learnosityScript = '//items.learnosity.com/?v2022.1.LTS';
+            const learnosityScript = '//reports.learnosity.com/?v2022.1.LTS';
             ExternalScript(learnosityScript)
                 .then(res => setStatus(res))
                 .catch(e => console.log(e))
@@ -31,12 +32,13 @@ const Reports = () => {
 
     }, [reportAPI]);
 
-    const navigate = useNavigate();
+
 
     useEffect(() => {
         let authenticated = '';
         if (reportAPI) {
             authenticated = JSON.parse(reportAPI);
+            console.log(authenticated);
         }
 
         const myListener = async () => {
@@ -53,7 +55,7 @@ const Reports = () => {
         <><Home />
             <div className='results-container'>
                 <h1 className='results-header'>🏆 Your Results 🏆</h1>
-                {status === 'loading' && <p> loading... </p>}
+                {status !== 'ready' && <p> loading... </p>}
                 {
                     status === 'ready' &&
                     <div id='report-container'>

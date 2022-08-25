@@ -16,10 +16,10 @@ const App = () => {
       <Routes>
         <Route exact path='/' element={<Home />} />
         <Route exact path='/assess' element={<Assess />} />
-        <Route exact path='/author' element={<Author />} />
+        <Route exact path='/author/items' element={<Author />} />
         <Route exact path='/author/multi-item' element={<AuthorMultipleItem />} />
         <Route exact path='/author/item-create' element={<AuthorCreateItem />} />
-        <Route exact path='/author/acivity-create' element={<AuthorCreateActivity />} />
+        <Route exact path='/author/activity-create' element={<AuthorCreateActivity />} />
         <Route exact path='/reports' element={<Reports />} />
       </Routes>
     </BrowserRouter>

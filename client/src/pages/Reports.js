@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ExternalScript } from '../utils/ExternalScript';
 import { ItemApiListner } from "../utils/ItemApiListener";
 import '../style/App.css';
+import Home from './Home';
 
 const Reports = () => {
 
@@ -49,7 +50,7 @@ const Reports = () => {
     }, [status])
 
     return (
-        <>
+        <><Home />
             <div className='results-container'>
                 <h1 className='results-header'>🏆 Your Results 🏆</h1>
                 {status === 'loading' && <p> loading... </p>}

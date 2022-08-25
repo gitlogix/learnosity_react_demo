@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ExternalScript } from '../../utils/ExternalScript';
 import { ItemApiListner } from "../../utils/ItemApiListener";
 import '../../style/App.css';
+import Home from '../Home';
 
 const Author = () => {
     const [itemAPI, setItemAPI] = useState(null);
@@ -44,6 +45,7 @@ const Author = () => {
 
     return (
         <>
+            <Home />
             {
                 status === 'ready' &&
                 <div id='section pad-sml'>

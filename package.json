@@ -15,8 +15,8 @@
     "yarn:build": "cd client && yarn run build"
   },
   "keywords": [
-    "learnosity NodeJS SDK React",
-    "react app",
+    "learnosity nodejs sdk react",
+    "learnosity react app",
     "learnosity",
     "learnosity api"
   ],

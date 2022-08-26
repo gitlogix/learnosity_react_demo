@@ -1,7 +1,7 @@
 const Learnosity = require('learnosity-sdk-nodejs/index');
 const production_domain = require('../utils/domains');
 
-const reportsRoute = (user) => {
+const reportsRoute = (activityId, userId) => {
 
   let domain = 'localhost';
 
@@ -27,10 +27,10 @@ const reportsRoute = (user) => {
           scoring_type: 'partial',
           ui: 'numeric',
           display_time_spent: true,
-          users: [{ id: user, name: 'Learnosity_1' }],
+          users: [{ id: userId, name: 'Learnosity_1' }],
           activities: [
             {
-              id: '3e5e4944-f6c8-4b10-ae58-8e1b6cc91962',
+              id: activityId,
               name: 'react_sdk_primer_activity',
             },
           ],

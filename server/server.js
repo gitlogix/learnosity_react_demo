@@ -30,10 +30,12 @@ app.get('/welcome', async (req, res) => {
   }
 });
 
-app.get('/quiz-loader', async (req, res) => {
+app.post('/quiz-loader', async (req, res) => {
   try {
+    const ActivityId = req.body.act;
+    const userId = req.body.uid;
     console.log('Route /assess has been called.');
-    res.json(assess());
+    res.json(assess(ActivityId, userId));
   } catch (err) {
     res.status(500).json(err);
   }
@@ -75,11 +77,14 @@ app.get('/author/multi-item', async (req, res) => {
   }
 });
 
-app.get('/reports-loader', async (req, res) => {
+app.post('/reports-loader', async (req, res) => {
   try {
     console.log('Route /reports has been called.');
-    const quiz_user = req.headers.referer.slice(req.headers.referer.indexOf('=') + 1);
-    res.json(reports(quiz_user));
+
+    const ActivityId = req.body.act;
+    const userId = req.body.uid;
+
+    res.json(reports(ActivityId, userId));
   } catch (err) {
     res.status(500).json(err);
   }

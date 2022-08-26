@@ -1,20 +1,28 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from "react-router-dom";
-import { ExternalScript } from '../utils/ExternalScript';
-import { ItemApiListner } from "../utils/ItemApiListener";
-import '../style/App.css';
-import Home from './Home';
+import { useNavigate, useParams } from "react-router-dom";
+import { ExternalScript } from '../../utils/ExternalScript';
+import { ItemApiListner } from "../../utils/ItemApiListener";
+import '../../style/App.css';
+import Home from '../Home';
 
 const Reports = () => {
-
+    const { act, uid } = useParams();
     const [reportAPI, setReportAPI] = useState(null);
     const [status, setStatus] = useState('');
     const navigate = useNavigate();
+    console.log(act, uid)
 
     useEffect(() => {
 
         const callLearnosityAPI = async () => {
-            const response = await fetch('/reports-loader');
+            const req = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ act: act, uid: uid }),
+            }
+            const response = await fetch('/reports-loader', req);
             const body = await response.json();
 
             if (response.status !== 200) {

@@ -41,6 +41,7 @@ const Home = () => {
           </div>
         </div>
       </nav>
+      {console.log(window)}
     </>
   );
 }

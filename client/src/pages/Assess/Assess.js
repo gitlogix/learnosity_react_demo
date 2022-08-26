@@ -1,16 +1,24 @@
 import { useState, useEffect } from 'react';
-import { ExternalScript } from '../utils/ExternalScript';
-import { ItemApiListner } from "../utils/ItemApiListener";
-import '../style/App.css';
-import Home from './Home';
+import { ExternalScript } from '../../utils/ExternalScript';
+import { ItemApiListner } from "../../utils/ItemApiListener";
+import '../../style/App.css';
+import Home from '../Home';
+import { useParams } from 'react-router-dom';
 
 const Assess = () => {
+  const param = useParams();
   const [itemAPI, setItemAPI] = useState(null);
   const [status, setStatus] = useState('');
-
   useEffect(() => {
     const callLearnosityAPI = async () => {
-      const response = await fetch('/quiz-loader');
+      const req = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(param),
+      }
+      const response = await fetch('/quiz-loader', req);
       const body = await response.json();
       if (response.status !== 200 && response.status !== 304) {
         throw Error(body.message)

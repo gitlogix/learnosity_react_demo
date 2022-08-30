@@ -4,9 +4,11 @@ const client = require("mailchimp-marketing");
 const cors = require("cors");
 const app = express();
 
+require('dotenv').config();
+
 // static folder
 client.setConfig({
-    apiKey: "55b24e4b1e467adb061176a8d8726f79-us9",
+    apiKey: process.env.APIKEY,
     server: "us9",
 });
 

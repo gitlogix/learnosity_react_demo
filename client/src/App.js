@@ -7,11 +7,12 @@ import AuthorMultipleItem from './pages/author/AuthorMultipleItem';
 import AuthorCreateItem from './pages/author/AuthorCreateItem';
 import Reports from './pages/Report/Reports';
 import AuthorCreateActivity from './pages/author/AuthorCreateActivity';
-
-import './style/App.css'
 import AssessPage from './pages/Assess/AssessPage';
 import ReportPage from './pages/Report/ReportPage';
+import ItemPage from './pages/Assess/itemPage';
+import Item from './pages/Assess/Item';
 
+import './style/App.css'
 const App = () => {
   return (
     <BrowserRouter>
@@ -24,6 +25,8 @@ const App = () => {
         <Route exact path='/author/item-create' element={<AuthorCreateItem />} />
         <Route exact path='/author/activity-create' element={<AuthorCreateActivity />} />
         <Route exact path='/reports/:act/:uid' element={<Reports />} />
+        <Route exact path='/item' element={<ItemPage />} />
+        <Route exact path='/item/:act/:uid/:item' element={<Item />} />
         <Route exact path='/reports' element={<ReportPage />} />
       </Routes>
     </BrowserRouter>

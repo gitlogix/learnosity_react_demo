@@ -1,7 +1,8 @@
 const path = require('path');
 const express = require('express');
 const reports = require('./controllers/reportsRoute');
-const assess = require('./controllers/assessRoute');
+const assess = require('./controllers/Assessment/assessRoute');
+const item = require('./controllers/Assessment/ItemRoute');
 const author = require('./controllers/author/authorRoute');
 const welcome = require('./controllers/welcomeRoute');
 const authorMultipleItemRoute = require('./controllers/author/authorMultipleItemRoute');
@@ -25,6 +26,18 @@ app.get('/welcome', async (req, res) => {
   try {
     console.log('Route /welcome has been called.');
     res.json(welcome());
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+app.post('/item-loader', async (req, res) => {
+  try {
+    const ActivityId = req.body.act;
+    const userId = req.body.uid;
+    const itemId = req.body.item;
+    console.log('Route /assess has been called.');
+    res.json(item(ActivityId, userId, itemId));
   } catch (err) {
     res.status(500).json(err);
   }
@@ -80,11 +93,8 @@ app.get('/author/multi-item', async (req, res) => {
 app.post('/reports-loader', async (req, res) => {
   try {
     console.log('Route /reports has been called.');
-
-    const ActivityId = req.body.act;
-    const userId = req.body.uid;
-
-    res.json(reports(ActivityId, userId));
+    const quiz_user = req.headers.referer.slice(req.headers.referer.indexOf('=') + 1);
+    res.json(reports(quiz_user));
   } catch (err) {
     res.status(500).json(err);
   }

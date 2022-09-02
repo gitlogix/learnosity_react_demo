@@ -5,14 +5,20 @@ export const ItemApiListner = (authentication) => {
 
         if (typeof LearnosityItems != 'undefined') {
 
-            window.LearnosityItems.init(authentication, {
-                readyListener() {
-                    console.log('👍🏼 <<< Learnosity Assess API is ready >>> 🧘🏼');
+            var callbacks = {
+                "readyListener": function () {
+                    console.log("Learnosity Access API is ready");
                 },
-                errorListener(err) {
-                    console.log('error', err);
+                "errorListener": function (e) {
+                    //callback to occur on error
+                    console.log("Error code ", e.code);
+                    console.log("Error message ", e.message);
+                    console.log("Error name ", e.name);
+                    console.log("Error name ", e.title);
                 }
-            })
+            };
+
+            window.LearnosityItems.init(authentication, callbacks)
         }
 
         if (typeof LearnosityAuthor != 'undefined') {

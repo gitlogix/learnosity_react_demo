@@ -7,12 +7,24 @@
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js",
+<<<<<<< HEAD
     "npm:develop": "concurrently \"cd server && npm run watch\" \"cd client && npm start\"",
+=======
+    "develop": "concurrently \"cd server && npm run watch\" \"cd client && npm start\"",
+<<<<<<< Updated upstream
+    "install": "cd server && npm i && cd ../client && npm i",
+    "build": "cd client && npm run build"
+=======
+>>>>>>> T-104
     "yarn:develop": "concurrently \"cd server && yarn run watch\" \"cd client && yarn start\"",
     "npm:install": "cd server && npm i && cd ../client && npm i",
     "yarn:install": "cd server && yarn && cd ../client && yarn",
     "npm:build": "cd client && npm run build",
     "yarn:build": "cd client && yarn run build"
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> T-104
   },
   "keywords": [
     "learnosity nodejs sdk react",

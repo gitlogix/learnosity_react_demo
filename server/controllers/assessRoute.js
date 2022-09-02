@@ -47,7 +47,7 @@ const assessRoute = (activityId, userId) => {
       // A reference of the Activity to retrieve from the Item bank, defining which
       // Items will be served in this assessment.
 
-      activity_template_id: activityId,
+      activity_template_id: 'react_sdk_primer_activity',
 
       // Uniquely identifies this specific assessment attempt session for  save/resume, data
       // retrieval and reporting purposes. A UUID generated on line 18.
@@ -55,7 +55,7 @@ const assessRoute = (activityId, userId) => {
 
       // Used in data retrieval and reporting to compare results with other users
       // submitting the same assessment.
-      activity_id: activityId,
+      activity_id: 'react_sdk_primer_activity',
 
       // Selects a rendering mode, `assess` type is a 'standalone' mode (loading a complete
       // assessment player for navigation, alternatively use `inline` for embedding into a page).

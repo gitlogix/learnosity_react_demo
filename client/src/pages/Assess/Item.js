@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ExternalScript } from '../../utils/ExternalScript';
+import { ExternalScript } from '../../utils/reportWebVitals';
 import { ItemApiListner } from "../../utils/ItemApiListener";
 import '../../style/App.css';
 import Home from '../Home';

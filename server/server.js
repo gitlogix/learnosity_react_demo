@@ -1,7 +1,9 @@
 const path = require('path');
 const express = require('express');
 const reports = require('./controllers/reportsRoute');
-const assess = require('./controllers/assessRoute');
+const assess = require('./controllers/Assessment/assessRoute');
+const item = require('./controllers/Assessment/ItemRoute');
+const author = require('./controllers/author/authorRoute');
 const welcome = require('./controllers/welcomeRoute');
 require('dotenv').config();
 
@@ -24,7 +26,19 @@ app.get('/welcome', async (req, res) => {
   }
 });
 
-app.get('/quiz-loader', async (req, res) => {
+app.post('/item-loader', async (req, res) => {
+  try {
+    const ActivityId = req.body.act;
+    const userId = req.body.uid;
+    const itemId = req.body.item;
+    console.log('Route /assess has been called.');
+    res.json(item(ActivityId, userId, itemId));
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+app.post('/quiz-loader', async (req, res) => {
   try {
     console.log('Route /assess has been called.');
     res.json(assess());
@@ -36,7 +50,7 @@ app.get('/quiz-loader', async (req, res) => {
 app.get('/reports-loader', async (req, res) => {
   try {
     console.log('Route /reports has been called.');
-    const quiz_user = req.headers.referer.slice(req.headers.referer.indexOf('=')+1);
+    const quiz_user = req.headers.referer.slice(req.headers.referer.indexOf('=') + 1);
     res.json(reports(quiz_user));
   } catch (err) {
     res.status(500).json(err);

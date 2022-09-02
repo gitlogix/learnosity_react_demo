@@ -38,45 +38,51 @@ const Home = () => {
 
   return (
     <>
-      {loading ? (
-        <div> ....Loading </div>
-      ) : (
-        <div className="app">
-          <header className="app-header">
-            <a 
-              className="app-link" 
-              href="/assess" 
-              rel="noopener noreferrer"
-            >
-              <img src={logo} className="app-logo" alt="learnosity logo" />
-            </a>
-            <a
-              className="app-link"
-              href="https://learnosity.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img src={learnosity} className="app-name" alt="learnosity" />
-            </a>
-            <div className="react-logo-container">using 
-              <img src={react_logo} className="react-logo" alt="react logo" />
-            </div>
-          </header>
-          <a 
-            className="app-link" 
-            href="/assess" 
-            rel="noopener noreferrer"
-          >
-            <div className="message-container">
-              <div className="a-message-for-you">
-                <p className="the-message"> {homeMessage} </p>
-              </div>
-            </div>
-          </a>
-        </div>
-      )}
-    </>
-  )
-}
+      <nav className="navbar navbar-expand-lg bg-light" style={{ zIndex: '1100' }}>
+        <div className="container-fluid">
+          <a className="navbar-brand" href="/">Navbar</a>
+          <button className="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+            aria-expanded="false" aria-label="Toggle navigation">
+            <span className="navbar-toggler-icon"></span>
+          </button>
+          <div className="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+              <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle" href="#" role="button"
+                  data-bs-toggle="dropdown" aria-expanded="false">
+                  Assesss
+                </a>
+                <ul className="dropdown-menu">
+                  <li><a className="dropdown-item" href="/assess">Accessment</a></li>
+                  <li><a className="dropdown-item" href="/item">Item</a></li>
+                </ul>
+              </li>
+              <li className="nav-item">
+                <a className="nav-link active" aria-current="page" href="/reports">Reports</a>
+              </li>
 
-export default Home
+
+              <li className="nav-item dropdown">
+                <a className="nav-link dropdown-toggle" href="#" role="button"
+                  data-bs-toggle="dropdown" aria-expanded="false">
+                  Author
+                </a>
+                <ul className="dropdown-menu">
+                  <li><a className="dropdown-item" href="/author/items">Items</a></li>
+                  <li><a className="dropdown-item" href="/author/item-create">Create Item</a></li>
+                  <li><a className="dropdown-item" href="/author/multi-item">Multi Item</a></li>
+                  <li><a className="dropdown-item" href="/author/activity-create">Create Activity</a></li>
+                </ul>
+              </li>
+              <li className="nav-item">
+                <a className="nav-link disabled">Disabled</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </>
+      );
+};
+
+      export default Home;

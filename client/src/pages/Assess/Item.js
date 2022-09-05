@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ExternalScript } from '../../utils/reportWebVitals';
+import { ExternalScript } from '../../utils/ExternalScript';
 import { ItemApiListner } from "../../utils/ItemApiListener";
 import '../../style/App.css';
 import Home from '../Home';
@@ -58,6 +58,8 @@ const Item = () => {
                 <>
                     {console.log(param.item)}
                     <span class="learnosity-item" data-reference={param.item}></span>
+                    <span class="learnosity-save-button"></span>
+                    <span class="learnosity-submit-button"></span>
                 </>
             }
         </>

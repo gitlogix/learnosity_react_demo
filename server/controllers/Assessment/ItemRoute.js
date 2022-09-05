@@ -23,12 +23,22 @@ const itemRoute = (activityId, userId, itemId) => {
             type: 'submit_practice',
             session_id: session_id,
             user_id: userId,
+            state: 'initial',
             items: [
                 {
                     id: itemId,
                     reference: itemId
                 }
             ],
+            config: {
+                questions_api_init_options: {
+                    fontsize: "small",
+                    annotations: true,
+                    renderSubmitButton: true,
+                    renderSaveButton: true,
+                    showCorrectAnswers: 'true'
+                }
+            }
         }
     );
 

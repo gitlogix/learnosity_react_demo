@@ -34,8 +34,8 @@ const assessRoute = (activityId, userId) => {
 
       config: {
         configuration: {
-          'onsubmit_redirect_url': user_logged_in,
-          'lazyload': true
+          onsubmit_redirect_url: user_logged_in,
+          lazyload: true
         }
       }
     });

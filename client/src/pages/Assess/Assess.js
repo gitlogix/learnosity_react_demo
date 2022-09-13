@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+
 import { ExternalScript } from '../../utils/ExternalScript';
 import { ItemApiListner } from "../../utils/ItemApiListener";
-import '../../style/App.css';
 import Home from '../Home';
-import { useParams } from 'react-router-dom';
+
+import '../../style/assess.css';
 
 const Assess = () => {
   const param = useParams();
@@ -52,7 +54,8 @@ const Assess = () => {
   }, [status])
 
   return (
-    <><Home />
+    <>
+      <Home />
       {
         status === 'ready' &&
         <div id='quiz-container'>

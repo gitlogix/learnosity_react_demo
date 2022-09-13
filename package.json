@@ -8,7 +8,7 @@
   "scripts": {
     "start": "node server/server.js",
     "npm:develop": "concurrently \"cd server && npm run watch\" \"cd client && npm start\"",
-    "develop": "concurrently \"cd server && npm run watch\" \"cd client && npm start\"",
+    "dev": "npm run npm:develop",
     "yarn:develop": "concurrently \"cd server && yarn run watch\" \"cd client && yarn start\"",
     "npm:install": "cd server && npm i && cd ../client && npm i",
     "yarn:install": "cd server && yarn && cd ../client && yarn",

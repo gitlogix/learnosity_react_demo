@@ -41,7 +41,7 @@ const Author = () => {
         }
 
         myListener();
-    }, [status])
+    }, [status]);
 
     return (
         <>

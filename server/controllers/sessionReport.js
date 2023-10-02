@@ -1,7 +1,8 @@
 const Learnosity = require('learnosity-sdk-nodejs/index');
 const production_domain = require('../utils/domains');
 
-const SingleReportsQuestions = (session_id, user_id) => {
+const sessionReportInfo = (session_id, user_id) => {
+
   let domain = 'localhost';
 
   if (process.env.NODE_ENV === 'production') {
@@ -21,13 +22,12 @@ const SingleReportsQuestions = (session_id, user_id) => {
     {
       reports: [
         {
-          id: 'report-demo2',
-          type: 'session-detail-by-item',
+          id: 'report-24',
+          type: 'sessions-summary-by-question',
           user_id: user_id,
-          session_id: session_id,
-          questions_api_init_options: {
-            showCorrectAnswers: false,
-          },
+          session_ids: [
+            session_id
+          ],
         },
       ],
       configuration: {
@@ -39,4 +39,4 @@ const SingleReportsQuestions = (session_id, user_id) => {
 
 }
 
-module.exports = SingleReportsQuestions;
+module.exports = sessionReportInfo;

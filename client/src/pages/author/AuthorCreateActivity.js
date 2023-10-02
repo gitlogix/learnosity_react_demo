@@ -7,13 +7,13 @@ import Home from '../Home';
 const AuthorCreateActivity = () => {
     const [itemAPI, setItemAPI] = useState(null);
     const [status, setStatus] = useState('');
-
+    
     useEffect(() => {
         const callLearnosityAPI = async () => {
             const response = await fetch('/author/activity-create');
             const body = await response.json();
             if (response.status !== 200 && response.status !== 304) {
-                throw Error(body.message)
+                throw Error(body.message);
             }
             setItemAPI(JSON.stringify(body));
 
@@ -41,11 +41,12 @@ const AuthorCreateActivity = () => {
         }
 
         myListener();
-    }, [status])
+    }, [status]);
 
 
     return (
-        <><Home />
+        <>
+            <Home />
             {
                 status === 'ready' &&
                 <div id='section pad-sml'>

@@ -2,7 +2,7 @@ const Learnosity = require('learnosity-sdk-nodejs/index'); // Include Learnosity
 const uuid = require('uuid'); // Load the UUID library
 const production_domain = require('../../utils/domains');
 
-const authorCreateItem = () => {
+const authorCreateActivity = () => {
 
     // - - - - - - Learnosity's server-side configuration - - - - - - //
 
@@ -58,4 +58,4 @@ const authorCreateItem = () => {
     return { request };
 }
 
-module.exports = authorCreateItem;
+module.exports = authorCreateActivity;

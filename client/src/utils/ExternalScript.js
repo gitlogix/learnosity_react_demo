@@ -14,11 +14,13 @@ export const ExternalScript = (url) => {
                 results = 'ready';
                 script.removeEventListener("load", handleScript);
                 script.removeEventListener("error", handleScript);
+                console.log('result in load', results);
                 resolve(results);
             } else {
                 results = 'error';
                 script.removeEventListener("load", handleScript);
                 script.removeEventListener("error", handleScript);
+                console.log('result in error', results);
                 reject(results);
             }
         };

@@ -9,6 +9,7 @@ const Item = () => {
     const param = useParams();
     const [itemAPI, setItemAPI] = useState(null);
     const [status, setStatus] = useState('');
+
     useEffect(() => {
         const callLearnosityAPI = async () => {
             const req = {
@@ -34,7 +35,8 @@ const Item = () => {
         callLearnosityAPI()
             .catch(console.error);
 
-    }, []);
+    }, [param]);
+
     useEffect(() => {
         let authenticated = '';
         if (itemAPI) {
@@ -49,7 +51,7 @@ const Item = () => {
         }
 
         myListener();
-    }, [status])
+    }, [status,itemAPI])
 
     return (
         <><Home />

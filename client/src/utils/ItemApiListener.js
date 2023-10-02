@@ -1,5 +1,5 @@
-
 export const ItemApiListner = (authentication) => {
+    console.log('Logging', authentication);
 
     if (authentication) {
 

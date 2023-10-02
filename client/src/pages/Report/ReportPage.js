@@ -10,7 +10,6 @@ const ReportPage = () => {
     }
     return (
         <div style={{ position: 'absolute', top: '30%', left: '30%' }}>
-
             <p>Enter Activity ID Here:</p>
             <div className='enter-data' style={{ margin: '10px' }}>
                 <input type='text' value={activityId} onChange={(e) => setActivityId(e.target.value)} />

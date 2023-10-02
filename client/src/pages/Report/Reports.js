@@ -20,11 +20,10 @@ const Reports = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ act: act, uid: uid }),
+                body: JSON.stringify({ session_id: localStorage.getItem('session_id'), user_id: uid }),
             }
-            const response = await fetch('/reports-loader', req);
+            const response = await fetch('/reports-questions', req);
             const body = await response.json();
-
             if (response.status !== 200) {
                 throw Error(body.message)
             }
@@ -38,7 +37,7 @@ const Reports = () => {
         callLearnosityAPI()
             .catch(console.error);
 
-    }, [reportAPI]);
+    }, [uid]);
 
 
 
@@ -48,7 +47,7 @@ const Reports = () => {
             authenticated = JSON.parse(reportAPI);
             console.log(authenticated);
         }
-
+        console.log('authenticated',authenticated);
         const myListener = async () => {
             let quiz = ItemApiListner(authenticated.request);
 
@@ -57,7 +56,7 @@ const Reports = () => {
         }
 
         myListener();
-    }, [status])
+    }, [status,reportAPI])
 
     return (
         <><Home />
@@ -67,7 +66,7 @@ const Reports = () => {
                 {
                     status === 'ready' &&
                     <div id='report-container'>
-                        <div id='learnosity_report'></div>
+                        <div id='report-demo2'></div>
                     </div>
                 }
                 <button className="btn-try-again" onClick={() => navigate('/', { replace: true })}> Try Again ? </button>

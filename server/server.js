@@ -9,11 +9,12 @@ const welcome = require('./controllers/welcomeRoute');
 const authorMultipleItemRoute = require('./controllers/author/authorMultipleItemRoute');
 const authorCreateItem = require('./controllers/author/authorCreateItem');
 const authorCreateActivity = require('./controllers/author/authorCreateActivity');
+const feedbackRoute = require('./controllers/feedbackRoute');
 
 
 require('dotenv').config();
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 6666;
 
 const app = express();
 
@@ -94,7 +95,16 @@ app.get('/author/multi-item', async (req, res) => {
 app.post('/reports-questions', async (req, res) => {
   try {
     console.log('Route /reports has been called.');
-    res.json(reportsQuestions(req.body.session_id,req.body.user_id));
+    res.json(reportsQuestions(req.body.session_id, req.body.user_id));
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
+
+app.post('/feedback', async (req, res) => {
+  try {
+    console.log('Route /reports has been called.');
+    res.json(feedbackRoute(req.body));
   } catch (err) {
     res.status(500).json(err);
   }
@@ -103,7 +113,7 @@ app.post('/reports-questions', async (req, res) => {
 app.post('/session-info', async (req, res) => {
   try {
     console.log('Route /session has been called.');
-    res.json(sessionReportInfo(req.body.session_id,req.body.user_id));
+    res.json(sessionReportInfo(req.body.session_id, req.body.user_id));
   } catch (err) {
     res.status(500).json(err);
   }

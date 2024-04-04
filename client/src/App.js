@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
 import Home from './pages/Home';
 import Assess from './pages/Assess/Assess';
 import Author from './pages/author/Author';
@@ -12,7 +13,8 @@ import ReportPage from './pages/Report/ReportPage';
 import ItemPage from './pages/Assess/itemPage';
 import Item from './pages/Assess/Item';
 
-import './style/App.css'
+import './style/App.css';
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -24,7 +26,7 @@ const App = () => {
         <Route exact path='/author/multi-item' element={<AuthorMultipleItem />} />
         <Route exact path='/author/item-create' element={<AuthorCreateItem />} />
         <Route exact path='/author/activity-create' element={<AuthorCreateActivity />} />
-        <Route exact path='/reports/:act/:uid' element={<Reports />} />
+        <Route exact path='/reports/:session_id/:user_id' element={<Reports />} />
         <Route exact path='/item' element={<ItemPage />} />
         <Route exact path='/item/:act/:uid/:item' element={<Item />} />
         <Route exact path='/reports' element={<ReportPage />} />

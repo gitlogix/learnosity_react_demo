@@ -27,11 +27,11 @@ const Home = () => {
                 data-bs-toggle="dropdown"
                 aria-expanded="false"
               >
-                Assess
+                Assessment
               </a>
               <ul className="dropdown-menu">
-                <li><a className="dropdown-item" href="/assess">Accessment</a></li>
-                <li><a className="dropdown-item" href="/item">Item</a></li>
+                <li><a className="dropdown-item" href="/assess">Take Assessment</a></li>
+                <li><a className="dropdown-item" href="/item">Take Item</a></li>
               </ul>
             </li>
             <li className="nav-item">
@@ -45,10 +45,10 @@ const Home = () => {
                 Author
               </a>
               <ul className="dropdown-menu">
-                <li><a className="dropdown-item" href="/author/items">Items</a></li>
+                <li><a className="dropdown-item" href="/author/activity-create">Create Activity</a></li>
+                <li><a className="dropdown-item" href="/author/items">View Item List</a></li>
                 <li><a className="dropdown-item" href="/author/item-create">Create Item</a></li>
                 <li><a className="dropdown-item" href="/author/multi-item">Multi Item</a></li>
-                <li><a className="dropdown-item" href="/author/activity-create">Create Activity</a></li>
               </ul>
             </li>
             <li className="nav-item">

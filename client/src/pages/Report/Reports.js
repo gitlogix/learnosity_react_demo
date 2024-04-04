@@ -6,29 +6,28 @@ import '../../style/App.css';
 import Home from '../Home';
 
 const Reports = () => {
-    const { act, uid } = useParams();
+    const { session_id, user_id } = useParams();
     const [reportAPI, setReportAPI] = useState(null);
     const [status, setStatus] = useState('');
     const navigate = useNavigate();
-    console.log(act, uid)
 
     useEffect(() => {
-
         const callLearnosityAPI = async () => {
             const req = {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ session_id: localStorage.getItem('session_id'), user_id: uid }),
+                body: JSON.stringify({ session_id: session_id, user_id: user_id }),
             }
+
             const response = await fetch('/reports-questions', req);
             const body = await response.json();
             if (response.status !== 200) {
                 throw Error(body.message)
             }
             setReportAPI(JSON.stringify(body));
-            const learnosityScript = '//reports.learnosity.com/?v2022.1.LTS';
+            const learnosityScript = '//reports.learnosity.com/?v2023.1.LTS';
             ExternalScript(learnosityScript)
                 .then(res => setStatus(res))
                 .catch(e => console.log(e))
@@ -37,9 +36,7 @@ const Reports = () => {
         callLearnosityAPI()
             .catch(console.error);
 
-    }, [uid]);
-
-
+    }, [user_id]);
 
     useEffect(() => {
         let authenticated = '';

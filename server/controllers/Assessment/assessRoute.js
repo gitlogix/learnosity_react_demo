@@ -1,14 +1,16 @@
 const Learnosity = require('learnosity-sdk-nodejs/index'); // Include Learnosity SDK constructor
 const uuid = require('uuid'); // Load the UUID library
 
+const labelBundle = require('../../locales/fr-FR/assess-api.json');
+
 const assessRoute = (activityId, userId) => {
 
   const user_id = userId;
 
-  const session_id = uuid.v4();
+  const sessionId = uuid.v4();
 
   let domain = 'localhost';
-  const user_logged_in = `/reports/${activityId}/${userId}`;
+  const user_logged_in = `/reports/${sessionId}/${userId}`;
 
   // Instantiate the SDK
   const learnositySdk = new Learnosity();
@@ -25,7 +27,7 @@ const assessRoute = (activityId, userId) => {
       user_id: user_id,
 
       activity_template_id: activityId,
-      session_id: session_id,
+      session_id: sessionId,
       activity_id: activityId,
       rendering_type: 'assess',
       type: 'submit_practice',
@@ -36,7 +38,8 @@ const assessRoute = (activityId, userId) => {
         configuration: {
           onsubmit_redirect_url: user_logged_in,
           lazyload: true
-        }
+        },
+        labelBundle: labelBundle
       }
     });
 

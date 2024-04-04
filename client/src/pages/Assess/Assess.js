@@ -33,7 +33,7 @@ const Assess = () => {
       }
       setItemAPI(JSON.stringify(body));
 
-      const learnosityScript = '//items.learnosity.com/?v2022.1.LTS';
+      const learnosityScript = '//items.learnosity.com/?v2023.1.LTS';
       ExternalScript(learnosityScript)
         .then(res => setStatus(res))
         .catch(e => console.log(e))

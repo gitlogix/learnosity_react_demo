@@ -4,7 +4,7 @@ const reportsQuestions = require('./controllers/reportsRoute');
 const sessionReportInfo = require('./controllers/sessionReport');
 const assess = require('./controllers/Assessment/assessRoute');
 const item = require('./controllers/Assessment/ItemRoute');
-const author = require('./controllers/author/authorRoute');
+const author = require('./controllers/author/authorItemList');
 const welcome = require('./controllers/welcomeRoute');
 const authorMultipleItemRoute = require('./controllers/author/authorMultipleItemRoute');
 const authorCreateItem = require('./controllers/author/authorCreateItem');
@@ -45,12 +45,12 @@ app.post('/item-loader', async (req, res) => {
   }
 });
 
-app.post('/quiz-loader', async (req, res) => {
+app.post('/activity-loader', async (req, res) => {
   try {
     const ActivityId = req.body.act;
     const userId = req.body.uid;
     console.log('Route /assess has been called.');
-    res.json(assess(ActivityId, userId));
+    res.json(assess(ActivityId, userId, req.body.labelBundle));
   } catch (err) {
     res.status(500).json(err);
   }

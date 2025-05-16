@@ -17,8 +17,7 @@ const AuthorCreateActivity = () => {
             }
             setItemAPI(JSON.stringify(body));
 
-            const learnosityScript = '//authorapi.learnosity.com/?v2023.1.LTS';
-            ExternalScript(learnosityScript)
+            ExternalScript('//authorapi.learnosity.com/?v2023.1.LTS')
                 .then(res => setStatus(res))
                 .catch(e => console.log(e))
         }

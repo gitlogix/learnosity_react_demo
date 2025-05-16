@@ -1,9 +1,7 @@
 const Learnosity = require('learnosity-sdk-nodejs/index'); // Include Learnosity SDK constructor
 const uuid = require('uuid'); // Load the UUID library
 
-const labelBundle = require('../../locales/fr-FR/assess-api.json');
-
-const assessRoute = (activityId, userId) => {
+const assessRoute = (activityId, userId, labelBundle) => {
 
   const user_id = userId;
 

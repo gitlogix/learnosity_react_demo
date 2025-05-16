@@ -2,6 +2,10 @@ const Learnosity = require('learnosity-sdk-nodejs/index'); // Include Learnosity
 const uuid = require('uuid'); // Load the UUID library
 const production_domain = require('../../utils/domains');
 
+const questionApiLabels = require('../../locales/fr-FR/questions-api.json');
+const authorApiLabels = require('../../locales/fr-FR/author-api.json');
+const questionEditorApiLabels = require('../../locales/fr-FR/questioneditor-api.json');
+
 const authorCreateItem = () => {
 
     // - - - - - - Learnosity's server-side configuration - - - - - - //
@@ -71,6 +75,19 @@ const authorCreateItem = () => {
                             }
                         },
                         enable_audio_recording: true
+                    }
+                },
+                label_bundle: authorApiLabels,
+                dependencies: {
+                    question_editor_api: {
+                        init_options: {
+                            label_bundle: questionEditorApiLabels
+                        }
+                    },
+                    questions_api: {
+                        init_options: {
+                            labelBundle: questionApiLabels
+                        }
                     }
                 }
             },

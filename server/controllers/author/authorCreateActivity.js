@@ -1,6 +1,9 @@
 const Learnosity = require('learnosity-sdk-nodejs/index'); // Include Learnosity SDK constructor
 const uuid = require('uuid'); // Load the UUID library
 const production_domain = require('../../utils/domains');
+const questionApiLabels = require('../../locales/fr-FR/questions-api.json');
+const authorApiLabels = require('../../locales/fr-FR/author-api.json');
+const questionEditorApiLabels = require('../../locales/fr-FR/questioneditor-api.json');
 
 const authorCreateActivity = () => {
 
@@ -50,8 +53,22 @@ const authorCreateActivity = () => {
                 firstname: 'Demos',
                 lastname: 'User',
                 email: 'demos@learnosity.com'
+            },
+            config: {
+                label_bundle: authorApiLabels,
+                dependencies: {
+                    question_editor_api: {
+                        init_options: {
+                            label_bundle: questionEditorApiLabels
+                        }
+                    },
+                    questions_api: {
+                        init_options: {
+                            labelBundle: questionApiLabels
+                        }
+                    }
+                }
             }
-
         }
     );
 

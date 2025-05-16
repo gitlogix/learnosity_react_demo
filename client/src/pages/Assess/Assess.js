@@ -5,14 +5,18 @@ import { ExternalScript } from '../../utils/ExternalScript';
 import { ItemApiListner } from "../../utils/ItemApiListener";
 import Home from '../Home';
 
+import labelBundle from '../../assets/locales/fr-FR/assess-api.json';
+
 import '../../style/assess.css';
 
 const Assess = () => {
   const param = useParams();
   const [itemAPI, setItemAPI] = useState(null);
   const [status, setStatus] = useState('');
+
   useEffect(() => {
     const callLearnosityAPI = async () => {
+      param['labelBundle'] = labelBundle;
       const req = {
         method: 'POST',
         headers: {
@@ -20,13 +24,12 @@ const Assess = () => {
         },
         body: JSON.stringify(param),
       }
-      const response = await fetch('/quiz-loader', req);
+      const response = await fetch('/activity-loader', req);
      
 
       const body = await response.json();
 
       let session_id = body?.request?.request?.session_id
-      localStorage.setItem('session_id',session_id)
 
       if (response.status !== 200 && response.status !== 304) {
         throw Error(body.message)

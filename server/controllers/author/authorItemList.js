@@ -1,7 +1,11 @@
 const Learnosity = require('learnosity-sdk-nodejs/index'); // Include Learnosity SDK constructor
 const production_domain = require('../../utils/domains');
 
-const authorRoute = () => {
+const questionApiLabels = require('../../locales/fr-FR/questions-api.json');
+const authorApiLabels = require('../../locales/fr-FR/author-api.json');
+const questionEditorApiLabels = require('../../locales/fr-FR/questioneditor-api.json');
+
+const authorItemList = () => {
 
     // - - - - - - Learnosity's server-side configuration - - - - - - //
 
@@ -50,6 +54,19 @@ const authorRoute = () => {
                         shared_passage: true,
                         enable_audio_recording: true
                     }
+                },
+                label_bundle: authorApiLabels,
+                dependencies: {
+                    question_editor_api: {
+                        init_options: {
+                            label_bundle: questionEditorApiLabels
+                        }
+                    },
+                    questions_api: {
+                        init_options: {
+                            labelBundle: questionApiLabels
+                        }
+                    }
                 }
             },
             user: {
@@ -64,4 +81,4 @@ const authorRoute = () => {
     return { request };
 }
 
-module.exports = authorRoute;
+module.exports = authorItemList;

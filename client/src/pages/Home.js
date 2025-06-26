@@ -54,6 +54,10 @@ const Home = () => {
             <li className="nav-item">
               <a className="nav-link disabled">Disabled</a>
             </li>
+             <li className="nav-item">
+              <a className="nav-link active" aria-current="page" href="/grading">Grading</a>
+            </li>
+
           </ul>
         </div>
       </div>

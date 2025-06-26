@@ -5,7 +5,7 @@ export const ItemApiListner = (authentication) => {
 
         if (typeof LearnosityItems != 'undefined') {
 
-            var callbacks = {
+            const callbacks = {
                 "readyListener": function () {
                     console.log("Learnosity Access API is ready");
                 },
@@ -22,7 +22,7 @@ export const ItemApiListner = (authentication) => {
         }
 
         if (typeof LearnosityAuthor != 'undefined') {
-            var callbacks = {
+            const callbacks = {
                 "readyListener": function () {
                     console.log("Learnosity Author API is ready");
                 },
@@ -48,6 +48,24 @@ export const ItemApiListner = (authentication) => {
                     console.log('error', err);
                 }
             })
+        }
+
+        if (typeof LearnosityGrading != 'undefined') {
+            console.log('in the LearnosityGrading',window?.LearnosityGrading);
+            const callbacks = {
+                "readyListener": function () {
+                    console.log("Learnosity Grading API is ready");
+                },
+                "errorListener": function (e) {
+                    //callback to occur on error
+                    console.log("Error code ", e.code);
+                    console.log("Error message ", e.message);
+                    console.log("Error name ", e.name);
+                    console.log("Error name ", e.title);
+                }
+            };
+            const element = document.getElementById('manual-grading');
+            window.LearnosityGrading.init(authentication, element)
         }
 
     }

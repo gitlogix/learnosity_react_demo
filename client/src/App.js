@@ -14,6 +14,7 @@ import ItemPage from './pages/Assess/itemPage';
 import Item from './pages/Assess/Item';
 
 import './style/App.css';
+import Grading from './pages/Grading/Grading';
 
 const App = () => {
   return (
@@ -30,6 +31,7 @@ const App = () => {
         <Route exact path='/item' element={<ItemPage />} />
         <Route exact path='/item/:act/:uid/:item' element={<Item />} />
         <Route exact path='/reports' element={<ReportPage />} />
+        <Route exact path='/grading' element={<Grading />} />
       </Routes>
     </BrowserRouter>
   )

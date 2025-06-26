@@ -10,6 +10,8 @@ const authorMultipleItemRoute = require('./controllers/author/authorMultipleItem
 const authorCreateItem = require('./controllers/author/authorCreateItem');
 const authorCreateActivity = require('./controllers/author/authorCreateActivity');
 const feedbackRoute = require('./controllers/feedbackRoute');
+const gradingRoute = require('./controllers/Assessment/grading');
+const cors = require('cors');
 
 
 require('dotenv').config();
@@ -17,7 +19,7 @@ require('dotenv').config();
 const PORT = process.env.PORT || 6666;
 
 const app = express();
-
+app.use(cors());
 // parse requests of content-type: application/json
 app.use(express.json());
 
@@ -53,6 +55,39 @@ app.post('/activity-loader', async (req, res) => {
     res.json(assess(ActivityId, userId, req.body.labelBundle));
   } catch (err) {
     res.status(500).json(err);
+  }
+});
+
+app.post('/grading-api', (req, res) => {
+  try {
+    console.log('req.body', req.body);
+    const { session_id,activity_id, student_id, items, grader_id, state } = req.body;
+    
+    if (!session_id || !student_id) {
+      return res.status(400).json({ 
+        error: 'session_id and student_id are required for grading' 
+      });
+    }
+    
+    const result = gradingRoute(session_id, activity_id,student_id, items, state, grader_id);
+    
+    res.json({
+      request: result.request,
+      appConfig: JSON.parse(result.appConfig),
+      config: {
+        items: result.items,
+        sessionId: result.session_id,
+        studentId: result.student_id,
+        graderId: result.grader_id
+      }
+    });
+    
+  } catch(error) {
+    console.error('Grading API error:', error);
+    res.status(500).json({ 
+      error: error.message,
+      details: 'Failed to initialize grading interface'
+    });
   }
 });
 

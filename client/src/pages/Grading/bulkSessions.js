@@ -2,8 +2,7 @@ import { readSheet } from 'read-excel-file/universal';
 
 export const MAX_BULK_SESSIONS = 100;
 
-// Columns the export understands. Any other column is kept as it is and
-// shown on the cover page, so new Learnosity values only need a new column.
+// Columns the export understands. Any other column is kept in extra.
 const COLUMN_NAMES = {
   session_id: ['session_id', 'sessionid', 'session'],
   activity_id: ['activity_id', 'activityid', 'activity'],
@@ -143,25 +142,3 @@ export const candidateName = (session) => (
 export const sectionLabel = (session) => session.section || session.activity_id;
 
 export const isCompleted = (session) => !session.status || session.status.toLowerCase() === 'completed';
-
-const humanize = (label) => {
-  const words = label.replace(/_/g, ' ');
-  return words.charAt(0).toUpperCase() + words.slice(1);
-};
-
-// Label and value pairs for the cover page, in reading order
-export const coverFields = (session) => {
-  const score = session.max_score ? `${session.score} / ${session.max_score}` : session.score;
-
-  return [
-    ['Candidate', candidateName(session)],
-    ['Email', session.email],
-    ['User ID', session.user_id],
-    ['Section', session.section],
-    ['Activity ID', session.activity_id],
-    ['Session ID', session.session_id],
-    ['Status', session.status],
-    ['Score', score],
-    ...session.extra.map(field => [humanize(field.label), field.value]),
-  ].filter(([, value]) => value);
-};

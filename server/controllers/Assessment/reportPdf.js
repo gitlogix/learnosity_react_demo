@@ -48,7 +48,6 @@ const defaultReportOptions = {
   },
 };
 
-// The Paper API rejects nothing above this, so the limit has to be enforced here
 const MAX_BULK_REPORTS = 100;
 
 const buildReportConfig = (options, session) => ({
@@ -70,43 +69,17 @@ const createReportPdf = async ({ session_id, user_id, grader_id, options }) => {
   return response.data;
 };
 
-const escapeHtml = (value) => String(value)
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;');
-
-// fields is a list of [label, value] pairs. They come from an uploaded file, so all of it is escaped.
-const buildCoverPage = (fields) => {
-  const rows = fields.map(([label, value]) => (
-    '<tr>'
-    + `<td style="border: 1px solid #ccc; padding: 8px; font-weight: bold; width: 35%;">${escapeHtml(label)}</td>`
-    + `<td style="border: 1px solid #ccc; padding: 8px;">${escapeHtml(value)}</td>`
-    + '</tr>'
-  ));
-
-  return {
-    enabled: true,
-    content: '<div style="font-family: Arial, sans-serif; color: #333;">'
-      + '<h1>Candidate and session details</h1>'
-      + `<table style="width: 100%; border-collapse: collapse;">${rows.join('')}</table>`
-      + '</div>',
-    break_after_cover_page: true,
-  };
-};
-
 const createBulkReportPdf = async ({ sessions, grader_id, options }) => {
   const envelope = signedEnvelope(grader_id || sessions[0].user_id);
 
   const response = await axios.post(`${PAPER_API_URL}/api/reports/pdf`, {
     ...envelope,
     usrequest: {
-      report_config: sessions.map(({ session_id, user_id, first_name, last_name, cover_fields }) => buildReportConfig(options, {
+      report_config: sessions.map(({ session_id, user_id, first_name, last_name }) => buildReportConfig(options, {
         user_id,
         session_id,
         ...(first_name && { first_name }),
         ...(last_name && { last_name }),
-        ...(cover_fields?.length && { cover_page: buildCoverPage(cover_fields) }),
       })),
     },
   });

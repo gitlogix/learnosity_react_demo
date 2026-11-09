@@ -3,7 +3,6 @@ import ReportOptionsModal, { defaultReportOptions, modalStyles } from './ReportO
 import {
   MAX_BULK_SESSIONS,
   candidateName,
-  coverFields,
   isCompleted,
   readSessionsFile,
   sectionLabel,
@@ -124,7 +123,6 @@ const initialChoices = {
   excludedSections: [],
   correctAnswers: true,
   itemScores: true,
-  coverPage: true,
   filesPerCandidate: false,
   addIndex: true,
   reportOptions: null,
@@ -221,7 +219,7 @@ const BulkReportModal = ({ open, job, onClose, onGenerate, onSave }) => {
 
   const startExport = async () => {
     const chosen = exportSessions;
-    const { coverPage, filesPerCandidate, addIndex } = choices;
+    const { filesPerCandidate, addIndex } = choices;
     const options = buildOptions();
 
     setRun({ status: 'running', count: chosen.length });
@@ -232,7 +230,6 @@ const BulkReportModal = ({ open, job, onClose, onGenerate, onSave }) => {
       user_id: session.user_id,
       first_name: session.first_name,
       last_name: session.last_name,
-      ...(coverPage && { cover_fields: coverFields(session) }),
     }));
 
     const file = await onGenerate(requestSessions, options);
@@ -328,7 +325,7 @@ const BulkReportModal = ({ open, job, onClose, onGenerate, onSave }) => {
           />
           <p style={{ fontSize: '14px', color: '#666' }}>
             Required columns: <strong>session_id</strong>, <strong>activity_id</strong>, <strong>user_id</strong>.
-            Any other column, such as status, is kept.
+            Optional: session_status, first_name, last_name, email, section_name, score.
           </p>
           <p style={{ fontSize: '14px' }}>
             <a href={TEMPLATE_PATH} download>Download the Excel template</a>
@@ -439,10 +436,6 @@ const BulkReportModal = ({ open, job, onClose, onGenerate, onSave }) => {
         <label style={styles.choice}>
           <input type="checkbox" checked={choices.itemScores} onChange={(e) => choose({ itemScores: e.target.checked })} />
           <span>Item scores</span>
-        </label>
-        <label style={styles.choice}>
-          <input type="checkbox" checked={choices.coverPage} onChange={(e) => choose({ coverPage: e.target.checked })} />
-          <span>Cover page with candidate and session details</span>
         </label>
         <button type="button" onClick={() => setStep('options')} style={styles.linkButton}>
           More report options

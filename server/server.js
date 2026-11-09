@@ -32,8 +32,7 @@ const PORT = process.env.PORT || 5050;
 const app = express();
 app.use(cors());
 // parse requests of content-type: application/json
-// Bulk exports carry a cover page's details for up to 100 sessions
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json());
 
 // parse requests of content-type: application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));

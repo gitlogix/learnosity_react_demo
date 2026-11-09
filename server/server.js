@@ -11,17 +11,29 @@ const authorCreateItem = require('./controllers/author/authorCreateItem');
 const authorCreateActivity = require('./controllers/author/authorCreateActivity');
 const feedbackRoute = require('./controllers/feedbackRoute');
 const gradingRoute = require('./controllers/Assessment/grading');
+const {
+  MAX_BULK_REPORTS,
+  createReportPdf,
+  createBulkReportPdf,
+  getReportPdfStatus,
+  downloadReportPdf,
+  createAnswerKeys,
+  createContentReview,
+  createPaperDocument,
+  getDocumentJob,
+  downloadDocumentJob
+} = require('./controllers/Assessment/reportPdf');
 const cors = require('cors');
-
 
 require('dotenv').config();
 
-const PORT = process.env.PORT || 6666;
+const PORT = process.env.PORT || 5050;
 
 const app = express();
 app.use(cors());
 // parse requests of content-type: application/json
-app.use(express.json());
+// Bulk exports carry a cover page's details for up to 100 sessions
+app.use(express.json({ limit: '2mb' }));
 
 // parse requests of content-type: application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
@@ -88,6 +100,181 @@ app.post('/grading-api', (req, res) => {
       error: error.message,
       details: 'Failed to initialize grading interface'
     });
+  }
+});
+
+// Pass Paper API errors back to the client with their original status where possible
+const sendPaperApiError = (res, error) => {
+  const details = error.response?.data;
+
+  // No response means the Paper API was never reached. Node leaves message empty
+  // when every address for a host fails, so fall back to the error code.
+  if (!error.response && error.config?.url) {
+    const reason = error.message || error.code || 'connection failed';
+    const message = `Could not reach Paper API at ${error.config.url}: ${reason}`;
+    console.error('Paper API error:', message);
+    return res.status(502).json({ error: message });
+  }
+
+  console.error('Paper API error:', error.response?.status, details || error.message);
+  res.status(error.response?.status || 500).json({
+    error: details?.message || details?.error || error.message,
+    details: typeof details === 'object' ? details : undefined
+  });
+};
+
+app.post('/report-pdf', async (req, res) => {
+  try {
+    console.log('Route /report-pdf has been called.');
+    const { session_id, user_id, grader_id, options } = req.body;
+
+    if (!session_id || !user_id) {
+      return res.status(400).json({
+        error: 'session_id and user_id are required to generate a report PDF'
+      });
+    }
+
+    res.json(await createReportPdf({ session_id, user_id, grader_id, options }));
+  } catch (error) {
+    sendPaperApiError(res, error);
+  }
+});
+
+app.post('/report-pdf/bulk', async (req, res) => {
+  try {
+    console.log('Route /report-pdf/bulk has been called.');
+    const { sessions, grader_id, options } = req.body;
+
+    if (!Array.isArray(sessions) || sessions.length === 0 || sessions.length > MAX_BULK_REPORTS) {
+      return res.status(400).json({
+        error: `sessions must contain between 1 and ${MAX_BULK_REPORTS} entries`
+      });
+    }
+
+    if (sessions.some(session => !session?.session_id || !session?.user_id)) {
+      return res.status(400).json({
+        error: 'Every session needs a session_id and a user_id'
+      });
+    }
+
+    // A repeated session makes the Paper API fail the whole batch
+    const sessionIds = sessions.map(session => String(session.session_id).toLowerCase());
+    if (new Set(sessionIds).size !== sessionIds.length) {
+      return res.status(400).json({
+        error: 'Each session can only appear once in a batch'
+      });
+    }
+
+    res.json(await createBulkReportPdf({ sessions, grader_id, options }));
+  } catch (error) {
+    sendPaperApiError(res, error);
+  }
+});
+
+app.post('/report-pdf/status/:job_id', async (req, res) => {
+  try {
+    res.json(await getReportPdfStatus(req.params.job_id, req.body.user_id));
+  } catch (error) {
+    sendPaperApiError(res, error);
+  }
+});
+
+// Send a Paper API file to the client, keeping its type and filename
+const sendPaperFile = (res, response) => {
+  res.setHeader('Content-Type', response.headers['content-type'] || 'application/pdf');
+  if (response.headers['content-disposition']) {
+    res.setHeader('Content-Disposition', response.headers['content-disposition']);
+  }
+  response.data.pipe(res);
+};
+
+// Error bodies arrive as a stream on requests made with responseType: 'stream'
+const sendPaperDownloadError = (res, error) => {
+  const stream = error.response?.data;
+  if (stream && typeof stream.on === 'function') {
+    let body = '';
+    stream.on('data', chunk => { body += chunk; });
+    stream.on('end', () => {
+      try { error.response.data = JSON.parse(body); } catch (e) { error.response.data = { error: body }; }
+      sendPaperApiError(res, error);
+    });
+    return;
+  }
+  sendPaperApiError(res, error);
+};
+
+app.post('/report-pdf/download/:job_id', async (req, res) => {
+  try {
+    sendPaperFile(res, await downloadReportPdf(req.params.job_id, req.body.user_id));
+  } catch (error) {
+    sendPaperDownloadError(res, error);
+  }
+});
+
+app.post('/paper-documents/answer-keys', async (req, res) => {
+  try {
+    console.log('Route /paper-documents/answer-keys has been called.');
+    const { user_id, items, options } = req.body;
+
+    if (!user_id || !items?.length) {
+      return res.status(400).json({
+        error: 'user_id and items are required to generate answer keys'
+      });
+    }
+
+    res.json(await createAnswerKeys({ user_id, items, options }));
+  } catch (error) {
+    sendPaperApiError(res, error);
+  }
+});
+
+app.post('/paper-documents/content-review', async (req, res) => {
+  try {
+    console.log('Route /paper-documents/content-review has been called.');
+    const { user_id, items, options } = req.body;
+
+    if (!user_id || !items?.length) {
+      return res.status(400).json({
+        error: 'user_id and items are required to generate a content review'
+      });
+    }
+
+    res.json(await createContentReview({ user_id, items, options }));
+  } catch (error) {
+    sendPaperApiError(res, error);
+  }
+});
+
+app.post('/paper-documents/paper', async (req, res) => {
+  try {
+    console.log('Route /paper-documents/paper has been called.');
+    const { user_id, items, name, options } = req.body;
+
+    if (!user_id || !items?.length || !name) {
+      return res.status(400).json({
+        error: 'user_id, items and name are required to generate a paper document'
+      });
+    }
+
+    res.json(await createPaperDocument({ user_id, items, name, options }));
+  } catch (error) {
+    sendPaperApiError(res, error);
+  }
+});
+
+app.post('/paper-documents/:job_id/status', async (req, res) => {
+  try {
+    res.json(await getDocumentJob(req.params.job_id, req.body.user_id));
+  } catch (error) {
+    sendPaperApiError(res, error);
+  }
+});
+
+app.post('/paper-documents/:job_id/download', async (req, res) => {
+  try {
+    sendPaperFile(res, await downloadDocumentJob(req.params.job_id, req.body.user_id));
+  } catch (error) {
+    sendPaperDownloadError(res, error);
   }
 });
 

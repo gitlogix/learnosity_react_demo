@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Home from '../Home';
 import { ExternalScript } from '../../utils/ExternalScript';
+import ReportOptionsModal from './ReportOptionsModal';
+import BulkReportModal from './BulkReportModal';
 
 const Grading = () => {
   const { activity_id } = useParams();
   
   const [formData, setFormData] = useState({
-    session_id: '19ca184a-f3e7-4d9f-8808-f322464b3223',
-    student_id: '1679',
-    activity_id: activity_id || '56768358-6ebc-4c81-8f77-7da75b922e72',
+    session_id: 'a9cc4017-2786-4dd8-a82a-6b917329a834',
+    student_id: '744717',
+    activity_id: activity_id || '7257f5ee-270c-4744-a517-691c021febbc',
     activity_template_id: 'Manual Grading collection',
-    items: 'e4ece8c1-974f-4d06-b361-bc09338aa895,8ea10a46-dd5a-4690-95f3-4eab20718cf9,bfb10b69-20f2-463c-bad4-edeb80f9cc51',
-    grader_id: '1679'
+    items: 'Stimulus,7bc49ad1-2b4c-4a0f-bf1e-47efe8b7a9f4,7bc49ad1-2b4c-4a0f-bf1e-47efe8b7a9f4,7bc49ad1-2b4c-4a0f-bf1e-47efe8b7a9f4,7bc49ad1-2b4c-4a0f-bf1e-47efe8b7a9f4,7bc49ad1-2b4c-4a0f-bf1e-47efe8b7a9f4',
+    grader_id: '744717'
   });
 
   const [currentStep, setCurrentStep] = useState('form');
@@ -20,6 +22,13 @@ const Grading = () => {
   const [error, setError] = useState(null);
   const [gradingApp, setGradingApp] = useState(null);
   const [attachedItems, setAttachedItems] = useState([]);
+  const [pdfJobs, setPdfJobs] = useState({});
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+
+  const PDF_POLL_INTERVAL_MS = 3000;
+  const PDF_POLL_TIMEOUT_MS = 3 * 60 * 1000;
+  const PDF_BULK_POLL_TIMEOUT_MS = 45 * 60 * 1000;
 
   const EVENT_NAMES = {
       saveStart: 'save:start',
@@ -105,7 +114,7 @@ const Grading = () => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3001/grading-api', {
+      const response = await fetch('/grading-api', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -301,12 +310,236 @@ const Grading = () => {
     setError(`Save failed: ${data.message || 'Unknown error'}`);
   };
 
+  const postJson = (url, body) => fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  const readError = async (response) => {
+    const text = await response.text();
+    try {
+      return JSON.parse(text).error || text;
+    } catch (e) {
+      return text;
+    }
+  };
+
+  const waitForPdfJob = async (statusPath, userId, timeoutMs) => {
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt < timeoutMs) {
+      const response = await postJson(statusPath, { user_id: userId });
+      if (!response.ok) {
+        throw new Error(`Status check failed: ${response.status} - ${await readError(response)}`);
+      }
+
+      const job = await response.json();
+      console.log('📄 PDF job status:', job);
+
+      if (job.status === 'complete') return job;
+      if (job.status === 'error') throw new Error(job.error || 'PDF generation failed');
+
+      await new Promise(resolve => setTimeout(resolve, PDF_POLL_INTERVAL_MS));
+    }
+
+    throw new Error('Timed out waiting for the PDF to be generated');
+  };
+
+  const saveBlob = (blob, contentDisposition, fallbackName) => {
+    const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(contentDisposition || '');
+    const fileName = match ? decodeURIComponent(match[1]) : fallbackName;
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const getItemList = () => [
+    ...new Set(formData.items.split(',').map(item => item.trim()).filter(item => item.length > 0))
+  ];
+
+  const reportJobPath = (jobId) => ({
+    status: `/report-pdf/status/${jobId}`,
+    download: `/report-pdf/download/${jobId}`,
+  });
+
+  const PDF_DOCUMENTS = [
+    {
+      key: 'report',
+      label: 'Download PDF Report',
+      hasOptions: true,
+      createPath: '/report-pdf',
+      jobPath: reportJobPath,
+      createBody: (userId, options) => ({
+        session_id: formData.session_id,
+        user_id: formData.student_id,
+        grader_id: formData.grader_id,
+        options,
+      }),
+      fileName: () => `${formData.student_id}-${formData.session_id}.pdf`,
+    },
+    {
+      key: 'answerKeys',
+      label: 'Download Answer Keys',
+      createPath: '/paper-documents/answer-keys',
+      createBody: (userId) => ({ user_id: userId, items: getItemList() }),
+      fileName: () => `answer-keys-${formData.session_id}.pdf`,
+    },
+    {
+      key: 'contentReview',
+      label: 'Download Content Review',
+      createPath: '/paper-documents/content-review',
+      createBody: (userId) => ({ user_id: userId, items: getItemList() }),
+      fileName: () => `content-review-${formData.session_id}.pdf`,
+    },
+    {
+      key: 'paperDocument',
+      label: 'Download Printable Paper',
+      createPath: '/paper-documents/paper',
+      createBody: (userId) => ({
+        user_id: userId,
+        items: getItemList(),
+        name: `Paper - ${formData.activity_id}`,
+      }),
+      fileName: () => `paper-${formData.activity_id}.pdf`,
+    },
+  ];
+
+  const BULK_REPORT_DOCUMENT = {
+    key: 'bulkReport',
+    createPath: '/report-pdf/bulk',
+    jobPath: reportJobPath,
+    createBody: (userId, { sessions, options }) => ({ sessions, options, grader_id: formData.grader_id }),
+    fileName: () => 'answer-sheets.zip',
+    pollTimeoutMs: PDF_BULK_POLL_TIMEOUT_MS,
+    saveFile: false,
+  };
+
+  const defaultJobPath = (jobId) => ({
+    status: `/paper-documents/${jobId}/status`,
+    download: `/paper-documents/${jobId}/download`,
+  });
+
+  const downloadPdfDocument = async (pdfDocument, options) => {
+    const { key, createPath, createBody, fileName, jobPath = defaultJobPath, pollTimeoutMs = PDF_POLL_TIMEOUT_MS } = pdfDocument;
+    const userId = formData.grader_id || formData.student_id || options?.sessions?.[0]?.user_id;
+    const setJob = (job) => setPdfJobs(prev => ({ ...prev, [key]: job }));
+
+    setJob({ status: 'generating' });
+
+    try {
+      const createResponse = await postJson(createPath, createBody(userId, options));
+      if (!createResponse.ok) {
+        throw new Error(`Failed to start PDF generation: ${createResponse.status} - ${await readError(createResponse)}`);
+      }
+
+      const job = await createResponse.json();
+      const paths = jobPath(encodeURIComponent(job.job_id));
+      if (job.status !== 'complete') {
+        await waitForPdfJob(paths.status, userId, pollTimeoutMs);
+      }
+
+      setJob({ status: 'downloading' });
+      const downloadResponse = await postJson(paths.download, { user_id: userId });
+      if (!downloadResponse.ok) {
+        throw new Error(`Download failed: ${downloadResponse.status} - ${await readError(downloadResponse)}`);
+      }
+
+      const blob = await downloadResponse.blob();
+      if (pdfDocument.saveFile !== false) {
+        saveBlob(blob, downloadResponse.headers.get('Content-Disposition'), fileName());
+      }
+      setJob({ status: 'idle' });
+      return { blob };
+    } catch (error) {
+      console.error(`${key} PDF error:`, error);
+      setJob({ status: 'error', error: error.message });
+      return false;
+    }
+  };
+
+  const generateReport = async (options) => {
+    const reportDocument = PDF_DOCUMENTS.find(pdfDocument => pdfDocument.key === 'report');
+    if (await downloadPdfDocument(reportDocument, options)) {
+      setReportModalOpen(false);
+    }
+  };
+
+  const generateBulkReports = (sessions, options) => downloadPdfDocument(BULK_REPORT_DOCUMENT, { sessions, options });
+
+  const openBulkModal = () => {
+    setPdfJobs(prev => ({ ...prev, [BULK_REPORT_DOCUMENT.key]: undefined }));
+    setBulkModalOpen(true);
+  };
+
+  const renderBulkButton = () => (
+    <button
+      type="button"
+      onClick={openBulkModal}
+      style={{
+        backgroundColor: 'white',
+        color: '#117a8b',
+        padding: '8px 16px',
+        border: '1px solid #17a2b8',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        marginLeft: '10px',
+        verticalAlign: 'top'
+      }}
+    >
+      Bulk Import Sessions
+    </button>
+  );
+
+  const renderPdfButton = (pdfDocument) => {
+    const job = pdfJobs[pdfDocument.key] || { status: 'idle' };
+    const busy = job.status === 'generating' || job.status === 'downloading';
+    const labels = {
+      generating: 'Generating PDF...',
+      downloading: 'Downloading PDF...',
+    };
+
+    return (
+      <div key={pdfDocument.key} style={{ display: 'inline-block', marginLeft: '10px', verticalAlign: 'top' }}>
+        <button
+          type="button"
+          onClick={() => (pdfDocument.hasOptions ? setReportModalOpen(true) : downloadPdfDocument(pdfDocument))}
+          disabled={busy}
+          style={{
+            backgroundColor: '#17a2b8',
+            color: 'white',
+            padding: '8px 16px',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: busy ? 'not-allowed' : 'pointer',
+            opacity: busy ? 0.6 : 1
+          }}
+        >
+          {labels[job.status] || `⬇ ${pdfDocument.label}`}
+        </button>
+        {job.error && (
+          <div style={{ color: '#c00', fontSize: '12px', marginTop: '5px' }}>{job.error}</div>
+        )}
+      </div>
+    );
+  };
+
+  const renderPdfButtons = () => PDF_DOCUMENTS.map(renderPdfButton);
+
   const resetToForm = () => {
     setCurrentStep('form');
     setError(null);
     setApiConfig(null);
     setGradingApp(null);
     setAttachedItems([]);
+    setPdfJobs({});
+    setReportModalOpen(false);
   };
 
   const renderForm = () => (
@@ -431,6 +664,7 @@ const Grading = () => {
           >
             {currentStep === 'loading' ? 'Loading...' : 'Load Grading Interface'}
           </button>
+          {renderBulkButton()}
         </form>
       </div>
     </div>
@@ -478,8 +712,10 @@ const Grading = () => {
         >
           ← Back to Form
         </button>
+        {renderPdfButtons()}
+        {renderBulkButton()}
       </div>
-      
+
       <div className="grading-interface">
         <div id="manual-grading" style={{ display: 'block' }}>
           <div id="inline-items-wrapper"></div>
@@ -554,6 +790,7 @@ const Grading = () => {
         >
           Grade Another Assessment
         </button>
+        {renderPdfButtons()}
       </div>
     </div>
   );
@@ -618,6 +855,19 @@ const Grading = () => {
       {currentStep === 'grading' && renderGrading()}
       {currentStep === 'complete' && renderComplete()}
       {currentStep === 'error' && renderError()}
+      <ReportOptionsModal
+        open={reportModalOpen}
+        job={pdfJobs.report}
+        onClose={() => setReportModalOpen(false)}
+        onGenerate={generateReport}
+      />
+      <BulkReportModal
+        open={bulkModalOpen}
+        job={pdfJobs.bulkReport}
+        onClose={() => setBulkModalOpen(false)}
+        onGenerate={generateBulkReports}
+        onSave={(blob, name) => saveBlob(blob, null, name)}
+      />
     </>
   );
 };

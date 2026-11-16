@@ -1,5 +1,6 @@
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { candidateName, sectionLabel } from './bulkSessions';
+import { linkUploadedFiles } from './pdfFileLinks';
 
 const DIAGNOSTICS_FILE = 'diagnostics.json';
 const INDEX_FILE = 'index.csv';
@@ -53,14 +54,24 @@ const candidateFileName = (session) => {
   return parts.map(cleanName).filter(Boolean).join('_');
 };
 
-const uniqueFileName = (base, usedNames) => {
-  let fileName = `${base}.pdf`;
+const uniqueFileName = (base, usedNames, extension = 'pdf') => {
+  const suffix = extension ? `.${extension}` : '';
+  let fileName = `${base}${suffix}`;
   for (let copy = 2; usedNames.has(fileName.toLowerCase()); copy += 1) {
-    fileName = `${base}_${copy}.pdf`;
+    fileName = `${base}_${copy}${suffix}`;
   }
   usedNames.add(fileName.toLowerCase());
   return fileName;
 };
+
+const splitExtension = (name) => {
+  const match = /^(.*)\.([A-Za-z0-9]{1,10})$/.exec(name);
+  return match ? { stem: match[1], extension: match[2].toLowerCase() } : { stem: name, extension: '' };
+};
+
+const sessionFileBase = (session) => [candidateFileName(session), cleanName(sectionLabel(session))]
+  .filter(Boolean)
+  .join('_');
 
 const mergePdfs = async (pdfs) => {
   const { PDFDocument } = await import('pdf-lib');
@@ -96,23 +107,41 @@ const csvCell = (value) => {
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 
-const buildIndex = (sessions, fileBySession) => {
+const buildIndex = (sessions, fileBySession, uploadsBySession) => {
   const rows = [
-    ['candidate', 'email', 'section', 'score', 'file'],
+    ['candidate', 'email', 'section', 'score', 'file', 'uploaded_files'],
     ...sessions.map(session => [
       candidateName(session),
       session.email,
       sectionLabel(session),
       session.score,
       fileBySession.get(session.session_id) || '',
+      (uploadsBySession.get(session.session_id) || []).join('; '),
     ]),
   ];
 
   return strToU8(`﻿${rows.map(row => row.map(csvCell).join(',')).join('\r\n')}\r\n`);
 };
 
-export const buildExportArchive = async (blob, sessions, { filesPerCandidate, addIndex }) => {
+// uploads: Map(lowercased session_id -> [{ name, data }]) of files candidates uploaded in their answers
+// fileLinks: Map(lowercased session_id -> file list from /session-assets), used to make the file links in the PDFs work
+export const buildExportArchive = async (blob, sessions, {
+  filesPerCandidate,
+  addIndex,
+  uploads = new Map(),
+  fileLinks = new Map(),
+}) => {
   const { pdfs, failed } = await readReportFiles(blob, sessions);
+
+  for (const session of sessions) {
+    const files = fileLinks.get(session.session_id.toLowerCase());
+    if (!pdfs.has(session.session_id) || !files?.length) continue;
+    try {
+      pdfs.set(session.session_id, await linkUploadedFiles(pdfs.get(session.session_id), files));
+    } catch (error) {
+      console.warn(`Could not link uploaded files in the PDF for ${session.session_id}:`, error);
+    }
+  }
 
   if (pdfs.size === 0) {
     return { zip: null, completed: 0, failed };
@@ -133,15 +162,26 @@ export const buildExportArchive = async (blob, sessions, { filesPerCandidate, ad
     }
   } else {
     generated.forEach(session => {
-      const base = [candidateFileName(session), cleanName(sectionLabel(session))].filter(Boolean).join('_');
-      const fileName = uniqueFileName(base, usedNames);
+      const fileName = uniqueFileName(sessionFileBase(session), usedNames);
       files[fileName] = pdfs.get(session.session_id);
       fileBySession.set(session.session_id, fileName);
     });
   }
 
+  // Uploaded files sit next to the PDFs, named after the candidate and section they belong to
+  const uploadsBySession = new Map();
+  sessions.forEach(session => {
+    (uploads.get(session.session_id.toLowerCase()) || []).forEach(upload => {
+      const { stem, extension } = splitExtension(upload.name);
+      const base = [sessionFileBase(session), cleanName(stem)].filter(Boolean).join('_');
+      const fileName = uniqueFileName(base, usedNames, extension);
+      files[fileName] = upload.data;
+      uploadsBySession.set(session.session_id, [...(uploadsBySession.get(session.session_id) || []), fileName]);
+    });
+  });
+
   if (addIndex) {
-    files[INDEX_FILE] = buildIndex(sessions, fileBySession);
+    files[INDEX_FILE] = buildIndex(sessions, fileBySession, uploadsBySession);
   }
 
   // PDFs are already compressed, so store them as they are
@@ -150,6 +190,7 @@ export const buildExportArchive = async (blob, sessions, { filesPerCandidate, ad
   return {
     zip: new Blob([zipped], { type: 'application/zip' }),
     completed: generated.length,
+    uploadCount: [...uploadsBySession.values()].reduce((total, names) => total + names.length, 0),
     failed,
   };
 };

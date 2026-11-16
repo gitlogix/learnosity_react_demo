@@ -56,20 +56,24 @@ const buildReportConfig = (options, session) => ({
   ...session,
 });
 
-const createReportPdf = async ({ session_id, user_id, grader_id, options }) => {
+// The Paper API calls callback_url when the job finishes
+const withCallback = (callback_url) => (callback_url ? { callback_url } : {});
+
+const createReportPdf = async ({ session_id, user_id, grader_id, options, callback_url }) => {
   const envelope = signedEnvelope(grader_id || user_id);
 
   const response = await axios.post(`${PAPER_API_URL}/api/reports/pdf`, {
     ...envelope,
     usrequest: {
       report_config: [buildReportConfig(options, { user_id, session_id })],
+      ...withCallback(callback_url),
     },
   });
 
   return response.data;
 };
 
-const createBulkReportPdf = async ({ sessions, grader_id, options }) => {
+const createBulkReportPdf = async ({ sessions, grader_id, options, callback_url }) => {
   const envelope = signedEnvelope(grader_id || sessions[0].user_id);
 
   const response = await axios.post(`${PAPER_API_URL}/api/reports/pdf`, {
@@ -81,6 +85,7 @@ const createBulkReportPdf = async ({ sessions, grader_id, options }) => {
         ...(first_name && { first_name }),
         ...(last_name && { last_name }),
       })),
+      ...withCallback(callback_url),
     },
   });
 
@@ -106,37 +111,40 @@ const downloadReportPdf = async (jobId, userId) => {
   return response;
 };
 
-const createAnswerKeys = async ({ user_id, items, options }) => {
+const createAnswerKeys = async ({ user_id, items, options, callback_url }) => {
   const response = await axios.post(`${PAPER_API_URL}/api/paper/answer-keys`, {
     ...signedEnvelope(user_id),
     usrequest: {
       ...options,
       items: items.map(reference => ({ reference, included: true })),
+      ...withCallback(callback_url),
     },
   });
 
   return response.data;
 };
 
-const createContentReview = async ({ user_id, items, options }) => {
+const createContentReview = async ({ user_id, items, options, callback_url }) => {
   const response = await axios.post(`${PAPER_API_URL}/api/content-review/pdf`, {
     ...signedEnvelope(user_id),
     usrequest: {
       ...options,
       items: items,
+      ...withCallback(callback_url),
     },
   });
 
   return response.data;
 };
 
-const createPaperDocument = async ({ user_id, items, name, options }) => {
+const createPaperDocument = async ({ user_id, items, name, options, callback_url }) => {
   const response = await axios.post(`${PAPER_API_URL}/api/paper/document`, {
     ...signedEnvelope(user_id),
     usrequest: {
       ...options,
       items: items,
       name: name,
+      ...withCallback(callback_url),
     },
   });
 

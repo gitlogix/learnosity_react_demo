@@ -8,6 +8,7 @@ import {
   sectionLabel,
 } from './bulkSessions';
 import { buildExportArchive } from './exportArchive';
+import { downloadSessionFiles } from './sessionFiles';
 
 const TEMPLATE_PATH = '/bulk-sessions-template.xlsx';
 const EXPORT_FILE_NAME = 'answer-sheets.zip';
@@ -125,6 +126,7 @@ const initialChoices = {
   itemScores: true,
   filesPerCandidate: false,
   addIndex: true,
+  addUploads: true,
   reportOptions: null,
 };
 
@@ -219,7 +221,7 @@ const BulkReportModal = ({ open, job, onClose, onGenerate, onSave }) => {
 
   const startExport = async () => {
     const chosen = exportSessions;
-    const { filesPerCandidate, addIndex } = choices;
+    const { filesPerCandidate, addIndex, addUploads } = choices;
     const options = buildOptions();
 
     setRun({ status: 'running', count: chosen.length });
@@ -238,10 +240,32 @@ const BulkReportModal = ({ open, job, onClose, onGenerate, onSave }) => {
       return;
     }
 
+    // Fetched after the reports, because the download links expire.
+    // The file list is also used to make the file links inside the PDFs work.
+    let uploads = new Map();
+    let fileLinks = new Map();
+    let failedUploads = [];
     try {
-      const archive = await buildExportArchive(file.blob, chosen, { filesPerCandidate, addIndex });
+      const result = await downloadSessionFiles(chosen.map(session => session.session_id), { download: addUploads });
+      uploads = result.bySession;
+      fileLinks = result.filesBySession;
+      failedUploads = result.failed;
+    } catch (error) {
+      console.error('Could not fetch uploaded files:', error);
+      if (addUploads) failedUploads = [{ session_id: '', name: 'Uploaded files', message: error.message }];
+    }
+
+    try {
+      const archive = await buildExportArchive(file.blob, chosen, { filesPerCandidate, addIndex, uploads, fileLinks });
       if (archive.zip) onSave(archive.zip, EXPORT_FILE_NAME);
-      setRun({ status: 'done', count: chosen.length, completed: archive.completed, failed: archive.failed });
+      setRun({
+        status: 'done',
+        count: chosen.length,
+        completed: archive.completed,
+        uploadCount: archive.uploadCount,
+        failed: archive.failed,
+        failedUploads,
+      });
     } catch (error) {
       console.error('Could not build export:', error);
       setRun({ status: 'error', count: chosen.length, error: 'The reports were generated, but the ZIP could not be built.' });
@@ -270,10 +294,17 @@ const BulkReportModal = ({ open, job, onClose, onGenerate, onSave }) => {
         {run.status === 'done' && (
           <p style={{ margin: '6px 0 8px' }}>
             {run.completed > 0
-              ? `${EXPORT_FILE_NAME} has been downloaded with ${run.completed} of ${run.count} reports.`
+              ? `${EXPORT_FILE_NAME} has been downloaded with ${run.completed} of ${run.count} reports`
+                + `${run.uploadCount ? ` and ${plural(run.uploadCount, 'uploaded file')}` : ''}.`
               : `None of the ${plural(run.count, 'report')} could be generated.`}
           </p>
         )}
+        {(run.failedUploads || []).map(upload => (
+          <div key={`${upload.session_id}-${upload.name}`} style={styles.failedRow}>
+            <strong>{upload.name}</strong> {upload.session_id}
+            <div style={{ color: '#c00' }}>Not added: {upload.message}</div>
+          </div>
+        ))}
         {failed.length > 0 && failed.map(report => (
           <div key={report.session_id} style={styles.failedRow}>
             <strong>{report.user_id}</strong> {report.session_id}
@@ -469,6 +500,10 @@ const BulkReportModal = ({ open, job, onClose, onGenerate, onSave }) => {
         <label style={styles.choice}>
           <input type="checkbox" checked={choices.addIndex} onChange={(e) => choose({ addIndex: e.target.checked })} />
           <span>Add index.csv (candidate, e-mail, section, score, file)</span>
+        </label>
+        <label style={styles.choice}>
+          <input type="checkbox" checked={choices.addUploads} onChange={(e) => choose({ addUploads: e.target.checked })} />
+          <span>Add files candidates uploaded in their answers</span>
         </label>
       </div>
     </div>

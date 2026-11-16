@@ -4,16 +4,19 @@ import Home from '../Home';
 import { ExternalScript } from '../../utils/ExternalScript';
 import ReportOptionsModal from './ReportOptionsModal';
 import BulkReportModal from './BulkReportModal';
+import { getClientId, waitForJobEvent } from './paperJobEvents';
+import { downloadFile, fetchSessionFiles, formatSize } from './sessionFiles';
+import { linkUploadedFiles } from './pdfFileLinks';
 
 const Grading = () => {
   const { activity_id } = useParams();
   
   const [formData, setFormData] = useState({
-    session_id: 'a9cc4017-2786-4dd8-a82a-6b917329a834',
-    student_id: '744717',
-    activity_id: activity_id || '7257f5ee-270c-4744-a517-691c021febbc',
+    session_id: '6a426f90-a6c0-4709-827e-1996ff3a4b8c',
+    student_id: '747222',
+    activity_id: activity_id || '39a8a840-f4b0-4697-9455-526b8c9b38fb',
     activity_template_id: 'Manual Grading collection',
-    items: 'Stimulus,7bc49ad1-2b4c-4a0f-bf1e-47efe8b7a9f4,7bc49ad1-2b4c-4a0f-bf1e-47efe8b7a9f4,7bc49ad1-2b4c-4a0f-bf1e-47efe8b7a9f4,7bc49ad1-2b4c-4a0f-bf1e-47efe8b7a9f4,7bc49ad1-2b4c-4a0f-bf1e-47efe8b7a9f4',
+    items: 'Questions Mix',
     grader_id: '744717'
   });
 
@@ -25,10 +28,44 @@ const Grading = () => {
   const [pdfJobs, setPdfJobs] = useState({});
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [sessionFiles, setSessionFiles] = useState({ status: 'idle', files: [] });
+  const [downloadingFile, setDownloadingFile] = useState(null);
 
+  // Polling is only used when the server has no PUBLIC_URL for callbacks
   const PDF_POLL_INTERVAL_MS = 3000;
   const PDF_POLL_TIMEOUT_MS = 3 * 60 * 1000;
   const PDF_BULK_POLL_TIMEOUT_MS = 45 * 60 * 1000;
+  // With callbacks, check status this often in case a callback is lost
+  const PDF_CALLBACK_FALLBACK_MS = 2 * 60 * 1000;
+  const PDF_BULK_CALLBACK_FALLBACK_MS = 10 * 60 * 1000;
+  const TOAST_HIDE_MS = 8000;
+
+  // List the files the candidate uploaded, once the session is open for grading
+  useEffect(() => {
+    if (currentStep !== 'grading' || !formData.session_id) return undefined;
+
+    let cancelled = false;
+    setSessionFiles({ status: 'loading', files: [] });
+    fetchSessionFiles([formData.session_id])
+      .then(bySession => {
+        if (!cancelled) {
+          setSessionFiles({ status: 'ready', files: bySession.get(formData.session_id.toLowerCase()) || [] });
+        }
+      })
+      .catch(error => {
+        console.error('Could not list uploaded files:', error);
+        if (!cancelled) setSessionFiles({ status: 'error', files: [], error: error.message });
+      });
+
+    return () => { cancelled = true; };
+  }, [currentStep, formData.session_id]);
+
+  useEffect(() => {
+    if (toast?.type !== 'success') return undefined;
+    const timer = setTimeout(() => setToast(null), TOAST_HIDE_MS);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   const EVENT_NAMES = {
       saveStart: 'save:start',
@@ -325,17 +362,22 @@ const Grading = () => {
     }
   };
 
+  const fetchJobStatus = async (statusPath, userId) => {
+    const response = await postJson(statusPath, { user_id: userId });
+    if (!response.ok) {
+      throw new Error(`Status check failed: ${response.status} - ${await readError(response)}`);
+    }
+
+    const job = await response.json();
+    console.log('📄 PDF job status:', job);
+    return job;
+  };
+
   const waitForPdfJob = async (statusPath, userId, timeoutMs) => {
     const startedAt = Date.now();
 
     while (Date.now() - startedAt < timeoutMs) {
-      const response = await postJson(statusPath, { user_id: userId });
-      if (!response.ok) {
-        throw new Error(`Status check failed: ${response.status} - ${await readError(response)}`);
-      }
-
-      const job = await response.json();
-      console.log('📄 PDF job status:', job);
+      const job = await fetchJobStatus(statusPath, userId);
 
       if (job.status === 'complete') return job;
       if (job.status === 'error') throw new Error(job.error || 'PDF generation failed');
@@ -383,6 +425,13 @@ const Grading = () => {
         options,
       }),
       fileName: () => `${formData.student_id}-${formData.session_id}.pdf`,
+      // Make the uploaded-file links in the PDF download the files
+      transform: async (blob) => {
+        const bySession = await fetchSessionFiles([formData.session_id]);
+        const files = bySession.get(formData.session_id.toLowerCase()) || [];
+        const bytes = await linkUploadedFiles(new Uint8Array(await blob.arrayBuffer()), files);
+        return new Blob([bytes], { type: 'application/pdf' });
+      },
     },
     {
       key: 'answerKeys',
@@ -418,6 +467,7 @@ const Grading = () => {
     createBody: (userId, { sessions, options }) => ({ sessions, options, grader_id: formData.grader_id }),
     fileName: () => 'answer-sheets.zip',
     pollTimeoutMs: PDF_BULK_POLL_TIMEOUT_MS,
+    fallbackMs: PDF_BULK_CALLBACK_FALLBACK_MS,
     saveFile: false,
   };
 
@@ -427,21 +477,38 @@ const Grading = () => {
   });
 
   const downloadPdfDocument = async (pdfDocument, options) => {
-    const { key, createPath, createBody, fileName, jobPath = defaultJobPath, pollTimeoutMs = PDF_POLL_TIMEOUT_MS } = pdfDocument;
+    const {
+      key,
+      createPath,
+      createBody,
+      fileName,
+      jobPath = defaultJobPath,
+      pollTimeoutMs = PDF_POLL_TIMEOUT_MS,
+      fallbackMs = PDF_CALLBACK_FALLBACK_MS,
+    } = pdfDocument;
     const userId = formData.grader_id || formData.student_id || options?.sessions?.[0]?.user_id;
     const setJob = (job) => setPdfJobs(prev => ({ ...prev, [key]: job }));
+    const showToast = pdfDocument.saveFile !== false;
+    const documentName = (pdfDocument.label || 'File').replace(/^Download /, '');
 
     setJob({ status: 'generating' });
 
     try {
-      const createResponse = await postJson(createPath, createBody(userId, options));
+      const createResponse = await postJson(createPath, { ...createBody(userId, options), client_id: getClientId() });
       if (!createResponse.ok) {
         throw new Error(`Failed to start PDF generation: ${createResponse.status} - ${await readError(createResponse)}`);
       }
 
       const job = await createResponse.json();
       const paths = jobPath(encodeURIComponent(job.job_id));
-      if (job.status !== 'complete') {
+      if (job.status !== 'complete' && job.notify) {
+        // The server tells us when Learnosity calls back
+        await waitForJobEvent(job.job_id, {
+          check: () => fetchJobStatus(paths.status, userId),
+          fallbackMs,
+          timeoutMs: pollTimeoutMs,
+        });
+      } else if (job.status !== 'complete') {
         await waitForPdfJob(paths.status, userId, pollTimeoutMs);
       }
 
@@ -451,15 +518,24 @@ const Grading = () => {
         throw new Error(`Download failed: ${downloadResponse.status} - ${await readError(downloadResponse)}`);
       }
 
-      const blob = await downloadResponse.blob();
+      let blob = await downloadResponse.blob();
+      if (pdfDocument.transform) {
+        try {
+          blob = await pdfDocument.transform(blob);
+        } catch (error) {
+          console.warn(`${key}: keeping the PDF as Learnosity made it:`, error);
+        }
+      }
       if (pdfDocument.saveFile !== false) {
         saveBlob(blob, downloadResponse.headers.get('Content-Disposition'), fileName());
       }
       setJob({ status: 'idle' });
+      if (showToast) setToast({ type: 'success', message: `${documentName} is ready and has been downloaded.` });
       return { blob };
     } catch (error) {
       console.error(`${key} PDF error:`, error);
       setJob({ status: 'error', error: error.message });
+      if (showToast) setToast({ type: 'error', message: `${documentName} failed: ${error.message}` });
       return false;
     }
   };
@@ -531,6 +607,46 @@ const Grading = () => {
   };
 
   const renderPdfButtons = () => PDF_DOCUMENTS.map(renderPdfButton);
+
+  const renderToast = () => {
+    if (!toast) return null;
+    const success = toast.type === 'success';
+
+    return (
+      <div
+        role={success ? 'status' : 'alert'}
+        style={{
+          position: 'fixed',
+          top: '16px',
+          right: '16px',
+          width: 'calc(100% - 32px)',
+          maxWidth: '360px',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '10px',
+          backgroundColor: success ? '#e8f6ec' : '#fdecec',
+          border: `1px solid ${success ? '#9fd8b0' : '#f3b4b4'}`,
+          color: success ? '#1e5e33' : '#9b1c1c',
+          borderRadius: '8px',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+          padding: '12px 14px',
+          fontSize: '14px',
+          textAlign: 'left',
+          zIndex: 10001,
+        }}
+      >
+        <span style={{ flex: 1, wordBreak: 'break-word' }}>{toast.message}</span>
+        <button
+          type="button"
+          aria-label="Dismiss"
+          onClick={() => setToast(null)}
+          style={{ background: 'none', border: 'none', color: 'inherit', fontSize: '18px', lineHeight: 1, cursor: 'pointer', padding: 0 }}
+        >
+          ×
+        </button>
+      </div>
+    );
+  };
 
   const resetToForm = () => {
     setCurrentStep('form');
@@ -688,6 +804,69 @@ const Grading = () => {
     </div>
   );
 
+  // Links expire, so get a new one for every download
+  const downloadUploadedFile = async (file) => {
+    setDownloadingFile(file.assetPath);
+    try {
+      const bySession = await fetchSessionFiles([formData.session_id]);
+      const fresh = (bySession.get(formData.session_id.toLowerCase()) || [])
+        .find(candidate => candidate.assetPath === file.assetPath);
+      if (!fresh) throw new Error('This file is no longer in the session');
+
+      saveBlob(new Blob([await downloadFile(fresh)]), null, file.name);
+    } catch (error) {
+      console.error('Uploaded file download failed:', error);
+      setToast({ type: 'error', message: `${file.name} could not be downloaded: ${error.message}` });
+    } finally {
+      setDownloadingFile(null);
+    }
+  };
+
+  const renderUploadedFiles = () => {
+    if (sessionFiles.status === 'idle') return null;
+
+    return (
+      <div style={{ padding: '0 20px 20px', textAlign: 'left' }}>
+        <h4 style={{ margin: '0 0 10px' }}>Uploaded files</h4>
+        {sessionFiles.status === 'loading' && <p style={{ margin: 0, color: '#555' }}>Looking for uploaded files...</p>}
+        {sessionFiles.status === 'error' && <p style={{ margin: 0, color: '#c00' }}>{sessionFiles.error}</p>}
+        {sessionFiles.status === 'ready' && sessionFiles.files.length === 0 && (
+          <p style={{ margin: 0, color: '#555' }}>The candidate did not upload any files in this session.</p>
+        )}
+        {sessionFiles.status === 'ready' && sessionFiles.files.map(file => {
+          const busy = downloadingFile === file.assetPath;
+          return (
+            <div
+              key={file.assetPath}
+              style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px', padding: '8px 0', borderTop: '1px solid #eee' }}
+            >
+              <span style={{ flex: '1 1 200px', wordBreak: 'break-word' }}>
+                {file.name}
+                <span style={{ color: '#777', fontSize: '13px' }}> {formatSize(file.size)}</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => downloadUploadedFile(file)}
+                disabled={busy}
+                style={{
+                  backgroundColor: 'white',
+                  color: '#117a8b',
+                  padding: '6px 12px',
+                  border: '1px solid #17a2b8',
+                  borderRadius: '4px',
+                  cursor: busy ? 'not-allowed' : 'pointer',
+                  opacity: busy ? 0.6 : 1
+                }}
+              >
+                {busy ? 'Downloading...' : '⬇ Download'}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   const renderGrading = () => (
     <div className="grading-container">
       <div className="grading-header" style={{ 
@@ -715,6 +894,8 @@ const Grading = () => {
         {renderPdfButtons()}
         {renderBulkButton()}
       </div>
+
+      {renderUploadedFiles()}
 
       <div className="grading-interface">
         <div id="manual-grading" style={{ display: 'block' }}>
@@ -868,6 +1049,7 @@ const Grading = () => {
         onGenerate={generateBulkReports}
         onSave={(blob, name) => saveBlob(blob, null, name)}
       />
+      {renderToast()}
     </>
   );
 };

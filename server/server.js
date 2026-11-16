@@ -23,6 +23,8 @@ const {
   getDocumentJob,
   downloadDocumentJob
 } = require('./controllers/Assessment/reportPdf');
+const paperJobs = require('./controllers/Assessment/paperJobs');
+const { MAX_SESSIONS: MAX_ASSET_SESSIONS, getSessionAssets, openUploadedFile } = require('./controllers/Assessment/sessionAssets');
 const cors = require('cors');
 
 require('dotenv').config();
@@ -122,10 +124,38 @@ const sendPaperApiError = (res, error) => {
   });
 };
 
+// Starts a Paper API job. When PUBLIC_URL is set and the browser sent a client_id,
+// the job gets a callback_url and the browser is told over /paper-jobs/events
+// when it finishes, so it doesn't have to keep calling the status endpoint.
+const startPaperJob = async ({ clientId, userId, kind, create }) => {
+  const watch = await paperJobs.registerJob({
+    clientId,
+    userId,
+    kind,
+    checkStatus: kind === 'document' ? getDocumentJob : getReportPdfStatus,
+  });
+
+  try {
+    const data = await create(watch?.callbackUrl);
+    const pending = Boolean(data.job_id) && data.status !== 'complete';
+
+    if (watch && pending) {
+      paperJobs.attachJobId(watch.token, data.job_id);
+    } else if (watch) {
+      paperJobs.forgetJob(watch.token);
+    }
+
+    return { ...data, notify: Boolean(watch) && pending };
+  } catch (error) {
+    if (watch) paperJobs.forgetJob(watch.token);
+    throw error;
+  }
+};
+
 app.post('/report-pdf', async (req, res) => {
   try {
     console.log('Route /report-pdf has been called.');
-    const { session_id, user_id, grader_id, options } = req.body;
+    const { session_id, user_id, grader_id, options, client_id } = req.body;
 
     if (!session_id || !user_id) {
       return res.status(400).json({
@@ -133,7 +163,12 @@ app.post('/report-pdf', async (req, res) => {
       });
     }
 
-    res.json(await createReportPdf({ session_id, user_id, grader_id, options }));
+    res.json(await startPaperJob({
+      clientId: client_id,
+      userId: grader_id || user_id,
+      kind: 'report',
+      create: callback_url => createReportPdf({ session_id, user_id, grader_id, options, callback_url }),
+    }));
   } catch (error) {
     sendPaperApiError(res, error);
   }
@@ -142,7 +177,7 @@ app.post('/report-pdf', async (req, res) => {
 app.post('/report-pdf/bulk', async (req, res) => {
   try {
     console.log('Route /report-pdf/bulk has been called.');
-    const { sessions, grader_id, options } = req.body;
+    const { sessions, grader_id, options, client_id } = req.body;
 
     if (!Array.isArray(sessions) || sessions.length === 0 || sessions.length > MAX_BULK_REPORTS) {
       return res.status(400).json({
@@ -164,7 +199,12 @@ app.post('/report-pdf/bulk', async (req, res) => {
       });
     }
 
-    res.json(await createBulkReportPdf({ sessions, grader_id, options }));
+    res.json(await startPaperJob({
+      clientId: client_id,
+      userId: grader_id || sessions[0].user_id,
+      kind: 'report',
+      create: callback_url => createBulkReportPdf({ sessions, grader_id, options, callback_url }),
+    }));
   } catch (error) {
     sendPaperApiError(res, error);
   }
@@ -213,7 +253,7 @@ app.post('/report-pdf/download/:job_id', async (req, res) => {
 app.post('/paper-documents/answer-keys', async (req, res) => {
   try {
     console.log('Route /paper-documents/answer-keys has been called.');
-    const { user_id, items, options } = req.body;
+    const { user_id, items, options, client_id } = req.body;
 
     if (!user_id || !items?.length) {
       return res.status(400).json({
@@ -221,7 +261,12 @@ app.post('/paper-documents/answer-keys', async (req, res) => {
       });
     }
 
-    res.json(await createAnswerKeys({ user_id, items, options }));
+    res.json(await startPaperJob({
+      clientId: client_id,
+      userId: user_id,
+      kind: 'document',
+      create: callback_url => createAnswerKeys({ user_id, items, options, callback_url }),
+    }));
   } catch (error) {
     sendPaperApiError(res, error);
   }
@@ -230,7 +275,7 @@ app.post('/paper-documents/answer-keys', async (req, res) => {
 app.post('/paper-documents/content-review', async (req, res) => {
   try {
     console.log('Route /paper-documents/content-review has been called.');
-    const { user_id, items, options } = req.body;
+    const { user_id, items, options, client_id } = req.body;
 
     if (!user_id || !items?.length) {
       return res.status(400).json({
@@ -238,7 +283,12 @@ app.post('/paper-documents/content-review', async (req, res) => {
       });
     }
 
-    res.json(await createContentReview({ user_id, items, options }));
+    res.json(await startPaperJob({
+      clientId: client_id,
+      userId: user_id,
+      kind: 'document',
+      create: callback_url => createContentReview({ user_id, items, options, callback_url }),
+    }));
   } catch (error) {
     sendPaperApiError(res, error);
   }
@@ -247,7 +297,7 @@ app.post('/paper-documents/content-review', async (req, res) => {
 app.post('/paper-documents/paper', async (req, res) => {
   try {
     console.log('Route /paper-documents/paper has been called.');
-    const { user_id, items, name, options } = req.body;
+    const { user_id, items, name, options, client_id } = req.body;
 
     if (!user_id || !items?.length || !name) {
       return res.status(400).json({
@@ -255,7 +305,12 @@ app.post('/paper-documents/paper', async (req, res) => {
       });
     }
 
-    res.json(await createPaperDocument({ user_id, items, name, options }));
+    res.json(await startPaperJob({
+      clientId: client_id,
+      userId: user_id,
+      kind: 'document',
+      create: callback_url => createPaperDocument({ user_id, items, name, options, callback_url }),
+    }));
   } catch (error) {
     sendPaperApiError(res, error);
   }
@@ -274,6 +329,75 @@ app.post('/paper-documents/:job_id/download', async (req, res) => {
     sendPaperFile(res, await downloadDocumentJob(req.params.job_id, req.body.user_id));
   } catch (error) {
     sendPaperDownloadError(res, error);
+  }
+});
+
+// Learnosity calls this when a job finishes. The docs don't describe the request,
+// so any method and body are accepted, and the job status is confirmed with the
+// Paper API rather than taken from the body.
+app.all('/paper-callback/:token', (req, res) => {
+  console.log('📬 Paper API callback:', req.method, JSON.stringify(req.body));
+
+  if (!paperJobs.handleCallback(req.params.token, req.query.secret, req.body)) {
+    return res.status(404).json({ error: 'Unknown job' });
+  }
+  res.json({ received: true });
+});
+
+// Used by paperJobs to confirm PUBLIC_URL reaches this server
+app.get('/paper-jobs/health', (req, res) => {
+  res.json({ instance: paperJobs.INSTANCE_ID });
+});
+
+// The browser keeps this open to hear when its jobs finish
+app.get('/paper-jobs/events', (req, res) => {
+  if (!req.query.client_id) {
+    return res.status(400).json({ error: 'client_id is required' });
+  }
+  paperJobs.subscribe(req.query.client_id, req, res);
+});
+
+// Files candidates uploaded in their answers, with pre-signed download URLs that expire after
+// expiry_duration seconds (default 3600). Body: { session_ids: [...], expiry_duration? }
+app.post('/session-assets', async (req, res) => {
+  try {
+    console.log('Route /session-assets has been called.');
+    const { session_ids, expiry_duration } = req.body;
+
+    if (!Array.isArray(session_ids) || session_ids.length === 0 || session_ids.length > MAX_ASSET_SESSIONS) {
+      return res.status(400).json({
+        error: `session_ids must contain between 1 and ${MAX_ASSET_SESSIONS} session ids`
+      });
+    }
+
+    res.json(await getSessionAssets({ session_ids, expiry_duration }));
+  } catch (error) {
+    console.error('Session assets error:', error.message);
+    res.status(502).json({ error: error.message || 'Could not get the uploaded files from Learnosity' });
+  }
+});
+
+// Opened from the links in report PDFs: sends the candidate's file under its original name
+app.get('/uploaded-file/:token', async (req, res) => {
+  try {
+    const file = await openUploadedFile(req.params.token);
+    if (!file) {
+      return res.status(404).send('This file link is not valid.');
+    }
+
+    const asciiName = file.name.replace(/[^\x20-\x7e]/g, '_').replace(/["\\]/g, '_');
+    res.setHeader('Content-Type', file.response.headers['content-type'] || 'application/octet-stream');
+    if (file.response.headers['content-length']) {
+      res.setHeader('Content-Length', file.response.headers['content-length']);
+    }
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(file.name)}`
+    );
+    file.response.data.pipe(res);
+  } catch (error) {
+    console.error('Uploaded file error:', error.message);
+    res.status(502).send('The file could not be fetched from Learnosity. Please try again.');
   }
 });
 
